@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/post_follow_connect.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/dialog.css">
+    <link rel="stylesheet" href="/css/nav_bar.css">
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <div class="logo">
+                <img src="/images/getConnect.png" alt="LinkedIn">
+            </div>
+            <div class="searchContainer">
+                <input id="search" type="text" placeholder="Search">
+                <ul id="list">
+                    
+                </ul>
+            </div>
+            <div class="nav-icons">
+                <a href="/post/allpost">Home</a>
+                <a href="#">My Network</a>
+                <a href="#">Jobs</a>
+                <a href="/render/chat/<%= author._id%>">Messaging</a>       
+                <a href="#">Notifications</a>
+                <a href="/view/<%= author._id %>/profile">Profile</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="profile-corporate-info">
+        <div class="corporate">
+            <!-- <a href="/render/resume1/<%= author._id %>">Resume</a> -->
+            <div class="in-corporate">
+                <!-- <a href="/render/resume/<%= author._id %>" class="resume-link">Resume</a> -->
+                <a href="/render/resume/<%= author._id %>">Resume</a>
+                <!-- <iframe 
+                    src="/render/resume/<%= author._id %>" 
+                    width="100%" 
+                    height="100%">
+                    This browser does not support PDFs. Please download the PDF to view it: 
+                    <a href="/render/resume/<%= author.id %>">Download PDF</a>.
+                </iframe> -->
+            </div>
+            <div class="in-corporate">
+                <div class="currently-link"><%= author.bio %></div>
+            </div>
+            <div class="in-corporate">                      
+                <a href="#" class="education-link">Harvard University</a>
+            </div>
+        </div>
+        
+        <div class="profile">
+            <div class="image">
+                <img src="<%= author.profilePicture && author.profilePicture.data ? `data:${author.profilePicture.contentType};base64,${author.profilePicture.data.toString('base64')}` : '' %>" alt="Profile pic">
+            </div>
+            <div class="info">
+                <div class="in"><%= author.userName %></div>
+                <div class="in"><%= author.bio %></div>
+            </div>
+            <div class="connection"><span>Connection : </span><%= author.connection.length %></div>
+            <div class="info2">
+                <% if(user._id.toString() != author._id.toString()){ %>
+                    <form action="/user/connection/<%= author._id %>" method="post">
+                        <input type="submit" value="Connect"/>
+                    </form>
+                <% } %>
+                <div class="below-pp-btn">
+                    <a href="/render/chat/<%= author._id%>"><button id="message">Message</button>    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="info3">
+            <% if(user._id.toString() ===  author._id.toString()) { %>
+                <div class="create">
+                    <button class="openModalBtn" data-modal="modal1">Create Post</button>
+                    <div id="modal1" class="modal">
+                        <div class="modal-content">
+                            <span class="close-btn">&times;</span>
+                            <h2>Create Post</h2>
+                            <form action="/post/addPost" method="post" enctype="multipart/form-data">
+                                <label for="image">Image:</label>
+                                <input type="file" id="image" name="image" required>
+                                <br>
+                                <label for="caption">Caption:</label>
+                                <input type="text" id="caption" name="caption" placeholder="Caption" required>
+                                <br>
+                                <input type="submit" value="Post">
+                            </form>
+                        </div>
+                    </div> 
+                </div>
+            <% }%>
+            <div>
+                <p class="interest">Interest</p>
+                <ul class="inte">
+                <% author.interests.forEach(interest => { %>
+                        <li><%= interest %></li>
+                <% }) %>
+                </ul>
+            </div>  
+        </div>
+    </div>
+
+    <div class="main">
+        <!-- <div class="main-left"> -->
+            <div class="left-div">
+                <a href="#">Mutuals</a>
+            </div>
+        <!-- </div> -->
+        <div class="main-activity">
+            <% if (posts && posts.length > 0) { %>
+                <% posts.forEach(post => { %>
+                    <div class="post" >
+                        <img src="<%= `data:${post.image.contentType};base64,${post.image.data.toString('base64')}` %>" alt="Post">
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <p>No posts available.</p>
+            <% } %>
+        </div>
+        
+    </div>
+</body>
+<script src="/javascripts/dialog.js" ></script>
+<script src="/javascripts/search.js"></script>
+</html>

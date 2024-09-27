@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>Resume</div>
+    <iframe 
+        src="/render/resume/<%= authorId %>" 
+        width="90%" 
+        height="90vh">
+        This browser does not support PDFs. Please download the PDF to view it: 
+    </iframe>
+    <a href="/render/resume/<%= authorId %>">Download PDF</a>.
+    
+</body>
+</html>

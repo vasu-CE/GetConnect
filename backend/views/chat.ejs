@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/chat.css" />
+    <link rel="stylesheet" href="/css/nav_bar.css" />
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <style>
+    .offline {
+      color: red;
+    }
+    .online {
+      color: rgb(20, 186, 20);
+    }
+  </style>
+  <body>
+    <header>
+      <div class="navbar">
+          <div class="logo">
+            <img src="/images/getConnect.png" alt="LinkedIn">
+          </div>
+          <div class="searchContainer">
+            <input id="search" type="text" placeholder="Search">
+            <ul id="list">
+
+            </ul>
+        </div>
+          <div class="nav-icons">
+              <a href="/post/allpost">Home</a>
+              <a href="#">My Network</a>
+              <a href="#">Jobs</a>
+              <a href="/render/chat/<%= user._id%>">Messaging</a>       
+              <a href="#">Notifications</a>
+              <a href="/view/<%= user._id %>/profile">Profile</a>
+          </div>
+      </div>
+  </header>
+
+    <div class="container">
+      <div class="left">
+        <div id="cards">
+          <% users.forEach((user) => { %>
+          <a
+            href="/render/chat/<%=user._id%>"
+            style="cursor: pointer; text-decoration: none"
+          >
+            <div class="card">
+              <div class="image">
+                <% if(user.profilePicture.data) { %>
+                  <img
+                  src="<%=  `data:${user.profilePicture.contentType};base64,${user.profilePicture.data.toString('base64')}` %>"
+                />
+                <%} else{ %>
+                  <img
+                  src="/images/tedy.png"
+                />
+                <%}%>
+              </div>
+              <div class="info">
+                <div class="userName"><%=user.userName%></div>
+                <div class="bio"><%=user.bio %></div>
+                <div id="user_<%=user._id%>" class="offline">Offline</div>
+              </div>
+            </div>
+          </a>
+          <%})%>
+        </div>
+      </div>
+      <div class="right">
+        <div class="top">
+          <div class="image">
+            <% if(user.profilePicture.data) { %>
+              <img
+              src="<%=  `data:${user.profilePicture.contentType};base64,${user.profilePicture.data.toString('base64')}` %>"
+            />
+            <%}else{ %>
+              <img
+              src="/images/tedy.png"
+            />
+            <%}%>
+          </div>
+          <div class="info">
+            <div class="username"><%=user.userName%></div>
+            <div class="bio"><%=user.bio%></div>
+          </div>
+        </div>
+        <div class="messages">
+          
+          <ul id="msg">
+            <!-- <li></li> -->
+          </ul>
+        </div>
+        <div id="typing"></div>
+        <form class="bottom">
+          <input class="message-input" type="text" placeholder="Message..." />
+          <input type="submit" value="Send" />
+        </form>
+      </div>
+    </div>
+    <script src="/javascripts/search.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        const messageInput = document.querySelector(".message-input");
+        const messageList = document.querySelector("#msg");
+        const messages = document.querySelector('.messages');
+        const recipientUserId = "<%= user._id %>";
+        const authorId = "<%= authorId %>";
+    
+        if (authorId) {
+          const socket = io("http://localhost:3000", {
+            query: {
+              userId: authorId,
+            },
+            transports: ["websocket"],
+          });
+    
+          socket.on("message", (data) => {
+            const { fromUserId, name, message, userProfilePicture } = data;
+            
+            const messageElement = document.createElement("li");
+            const messageImage = document.createElement('img');
+    
+            if (userProfilePicture && userProfilePicture.contentType && userProfilePicture.data) {
+              messageImage.src = `data:${userProfilePicture.contentType};base64,${userProfilePicture.data}`;
+            } else {
+              messageImage.src = '/images/tedy.png'; 
+            }
+    
+            if (fromUserId === authorId) {
+              messageElement.classList.add('liRight');
+            }
+            const messageText = document.createElement('span');
+            messageText.textContent = `${message}`;
+            messageElement.appendChild(messageImage);
+            messageElement.appendChild(messageText);
+            
+            messageList.appendChild(messageElement);
+          });
+    
+          document.querySelector(".bottom").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const message = messageInput.value.trim();
+            if (message && recipientUserId) {
+              socket.emit("message", { toUserId: recipientUserId, message });
+              socket.emit("authormessage", { authorId, message });
+              messageInput.value = "";
+            }
+          });
+    
+          socket.on("isOnline", (onlineUsers) => {
+            <!-- console.log("Online users:", onlineUsers); -->
+            onlineUsers.forEach((userId) => {
+              const userElement = document.getElementById(`user_${userId}`);
+              if (userElement) {
+                userElement.classList.add("online");
+                userElement.innerHTML = "Online";
+              }
+            });
+          });
+    
+          // Fetch existing messages
+          const response = await fetch(`/messages?fromUserId=${authorId}&toUserId=${recipientUserId}`);
+          const existingMessages = await response.json();
+    
+          existingMessages.forEach((msg) => {
+            const messageElement = document.createElement("li");
+            const messageImage = document.createElement('img');
+            const profilePicture = msg.fromUserId.profilePicture;
+
+            if (profilePicture) {
+              messageImage.src = `data:${profilePicture.contentType};base64,${profilePicture.data}`;
+            } else {
+              messageImage.src = '/images/tedy.png';
+            }
+    
+            if (msg.fromUserId === authorId) {
+              messageElement.classList.add('liRight');
+            }
+            const messageText = document.createElement('span');
+            messageText.textContent = `${msg.message}`;
+            messageElement.appendChild(messageImage);
+            messageElement.appendChild(messageText);
+            
+            
+            messageList.appendChild(messageElement);
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

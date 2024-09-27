@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Connect</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<link rel="stylesheet" href="/css/dialog.css"/>
+<link rel="stylesheet" href="/css/homePage.css"/>
+<link rel="stylesheet" href="/css/nav_bar.css"/>
+
+
+<body>
+    <header>
+        <div class="navbar">
+            <div class="logo">
+                <!-- <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" alt="LinkedIn"> -->
+                <img src="/images/getConnect.png" alt="LinkedIn">
+            </div>
+            <div class="searchContainer">
+                <input id="search" type="text" placeholder="Search">
+                <ul id="list">
+                </ul>
+            </div>
+            <div class="nav-icons">
+                <a href="/post/allpost">Home</a>
+                <a href="#">My Network</a>
+                <a href="#">Jobs</a>
+                <a href="/render/chat/<%= user._id%>">Messaging</a>       
+                <a href="#">Notifications</a>
+                <a href="/view/<%= user._id %>/profile">Profile</a>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <!-- Left Sidebar (Profile) -->
+            <aside class="sidebar-left">
+                <div class="profile-card">
+                    <img class="profile-picture" src="<%= user.profilePicture && user.profilePicture.data ? `data:${user.profilePicture.contentType};base64,${user.profilePicture.data.toString('base64')}` : 'https://via.placeholder.com/50' %>" alt="Profile pic">
+                    <h2><%= user.userName || "unknown" %></h2>
+                    <p><%= user.bio %></p><br>
+                    <button class="openModalBtn createPost create" data-modal="modal1">Create Post</button>
+                    <div id="modal1" class="modal">
+                        <div class="modal-content">
+                            <span class="close-btn">&times;</span>
+                            <h2>Create Post</h2>
+                            <form action="/post/addPost" method="post" enctype="multipart/form-data">
+                                <label for="image">Image:</label>
+                                <input type="file" id="image" name="image" required>
+                                <br>
+                                <label for="caption">Caption:</label>
+                                <input type="text" id="caption" name="caption" placeholder="Caption">
+                                <br>
+                                <input type="submit" value="Post">
+                            </form>
+                        </div>
+                    </div> 
+                    <div class="profile-stats">
+                        <p>My posts : <strong><%=user.posts.length%></strong></p>
+                        <p>connection : <strong><%=user.connection.length%></strong></p>
+                          
+                    </div>
+                    
+                    <a href="/render/profile"><button class="createProfile create">Create a proofile</button></a>
+                    <a href="/render/edit"><button class="createProfile create">Edit proofile</button></a>
+                    
+                </div>
+                <!-- <div class="groups">
+                    <p>Groups</p>
+                    <p>Events</p>
+                    <p>Followed Hashtags</p>
+                </div> -->
+            </aside>
+
+            <!-- Main Feed -->
+            <section class="main-feed">
+                
+
+                <!-- Sample Post -->
+                
+                <div id="posts">
+                    <% if (posts && posts.length > 0) { %>
+                        <% posts.forEach(post => { %>
+                            <div class="post">
+                                <div class="post-author">
+                                    <% if(post.author.profilePicture.data) { %>
+                                        <img class="postProfile" src="<%= `data:${post.author.profilePicture.contentType};base64,${post.author.profilePicture.data.toString('base64')}` %>" alt="Profile">
+                                    <% } else { %>
+                                        <img src="data:image/jpeg;base64,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" alt="profile" />
+                                    <% } %>
+                                    <div class="author-details">
+                                        <h3><%= post.author.userName %></h3>
+                                        <p><%= post.author.bio %></p>
+                                    </div>    
+                                    <button class="openModalBtn dot" data-modal="<%= post._id %>">...</button>
+                                    <div id="<%= post._id %>" class="modal">
+                                    <div class="modal-content">
+                                        <span class="close-btn">&times;</span>
+                                        <h2>Welcome</h2>
+                                        <% if(post.author._id.toString() == user._id.toString()) { %>
+                                            <a href="/post/delete/<%= post._id %>">
+                                                <button>Delete post</button>
+                                            </a>                                                
+                                        <% }else { %>
+                                            <% if(user.connection.includes(post.author._id.toString())) { %>
+                                                <form action="/user/connection/<%= post.author._id %>" method="post">
+                                                    <input type="submit" value="Disconnect"/>
+                                                </form>
+                                            <%} else {%>
+                                                <form action="/user/connection/<%= post.author._id %>" method="post">
+                                                    <input type="submit" value="Connect"/>
+                                                </form>
+                                            <%}%>
+                                        <% } %>
+                                    </div>
+                                </div> 
+                                </div>
+                                
+                                <div class="post-content">
+                                    <p style="margin-left:7px; margin-top:5px" ><%=post.caption%></p>
+                                    <img class="postImage" src="<%= `data:${post.image.contentType};base64,${post.image.data.toString('base64')}` %>" alt="Post">
+                                    <% if(post.likes.includes(user.id.toString())) { %>
+                                        <div class="like">
+                                            <a href="/post/<%= post._id %>/dislike" ><img class="svg" src="/icons/fillHeart.svg"></a>
+                                            <span> <%= post.likes.length %></span> 
+                                        </div>
+                                        <%} else {%>
+                                            <div class="like">
+                                                <a href="/post/<%= post._id %>/like" ><img class="svg" src="/icons/heart.svg"></a>
+                                                <span> <%= post.likes.length %></span> 
+                                            </div>
+                                    <%}%>
+                                </div>                          
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p>No posts available.</p>
+                    <% } %>
+                </div>
+                
+            </section>
+
+            <!-- Right Sidebar (LinkedIn News) -->
+            <aside class="sidebar-right">
+                <h2>GetConnect Community</h2>
+                <ul class="community">
+                    <a href="/post/allpost"><li>Learner</li></a>
+                    <a href="/post/allpost/java"><li>JAVA</li></a>
+                    <a href="/post/allpost/dsa"><li>DSA</li></a>
+                    <a href="/post/allpost/webdevelopment"><li>Web Development</li></a>
+                </ul>
+            </aside>
+        </div>
+    </main>
+    <script src="/javascripts/dialog.js" ></script>
+    <script src="/javascripts/search.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/editProfile.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Edit Profile</h1>
+      <form action="/profile/edit" method="post" enctype="multipart/form-data">
+        <div class="child">
+          <div class="input">
+            <label for="name">Change userName</label>
+            <input
+              id="name"
+              type="text"
+              name="userName"
+              placeholder="<%=user.userName%>"
+            />
+          </div>
+          <div class="input">
+            <label for="bio">Change bio</label>
+            <input
+              id="bio"
+              type="text"
+              name="bio"
+              placeholder="<%=user.bio %>"
+            />
+          </div>
+          
+
+          <div style="margin-bottom: 10px;" class="file">
+            <label for="profilePic"><h3>Change Profile Picture : </h3></label>
+            <input
+              id="profilePic"
+              type="file"
+              placeholder="Enter file"
+              name="profilePic"
+            />
+          </div>
+          
+
+          <div class="input interes deleteInte">
+            <label for="interest">Insert interest</label>
+            <select name="interests" id="interest">
+              <option value="" selected disabled>Select an option</option>
+              <option value="web development">Web Development</option>
+              <option value="java">Java</option>
+              <option value="node">Node.js</option>
+              <option value="express">Express.js</option>
+              <option value="css">CSS</option>
+              <option value="exploring">Exploring</option>
+            </select>
+          </div>
+
+          <div class="input  interes">
+            <label for="interest">Delete interest</label>
+            <select name="deleteInterest" id="interest">
+              <option value="" selected disabled>Select an option</option>
+              <option value="web development">Web Development</option>
+              <option value="java">Java</option>
+              <option value="node">Node.js</option>
+              <option value="express">Express.js</option>
+              <option value="css">CSS</option>
+              <option value="exploring">Exploring</option>
+            </select>
+          </div>
+
+            <div class="file" >
+                <label for="resume"><h2>Resume : </h2></label>
+                <input
+                  id="resume"
+                  type="file"
+                  name="resume"
+                />
+            </div>
+
+            
+            <% if(user.gender) { %>
+              <div class="gender-detail-box">
+                <span class="gender-title">Gender</span>
+                <div class="gender-category">
+                  <input type="radio" name="gender" id="male" value="male"
+                    <% if (user.gender === 'male') { %> checked <% } %> />
+                  <label for="male">Male</label>
+                  <input type="radio" name="gender" id="female" value="female"
+                    <% if (user.gender === 'female') { %> checked <% } %> /> 
+                  <label for="female">Female</label>
+                  <input type="radio" name="gender" id="other" value="other"
+                    <% if (user.gender === 'other') { %> checked <% } %> />
+                  <label for="other">Other</label>
+                </div>
+              </div>
+            <%}%>
+
+        </div>
+        <div class="submitBtn">
+          <input type="Submit" value="Upload" />
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

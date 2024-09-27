@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registration Form</title>
+    <link rel="stylesheet" href="/css/register.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="form-title">Registration</h1>
+      <form action="/user/register" method="post" enctype="multipart/form-data">
+        <div class="main-user-info">
+          <div class="user-input-box">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              name="userName"
+              placeholder="Enter Username"
+            />
+          </div>
+          <div class="user-input-box">
+            <label for="bio">Bio</label>
+            <input
+              type="text"
+              id="bio"
+              name="bio"
+              placeholder="bio..."
+            />
+          </div>
+          <div class="user-input-box">
+            <label for="options">Experience : </label>
+            <select id="options" name="experience">
+              <option value="" selected disabled>Select an option</option>
+              <option value="0year">0 year</option>
+              <option value="1year">1 year</option>
+              <option value="2year">2 year</option>
+              <option value="5+year">5+ year</option>
+            </select>
+          </div>
+          <div class="user-input-box">
+            <label for="interest">Choose an interest:</label>
+        <select name="interest" id="interest">
+            <option value="" selected disabled>Select an option</option>
+            <option value='web development'>Web Development</option>
+            <option value='java'>Java</option>
+            <option value='node'>Node.js</option>
+            <option value='express'>Express.js</option>
+            <option value='css'>CSS</option>
+            <option value='exploring'>Exploring</option>
+        </select>
+          </div>
+          <div class="user-input-box">
+            <label for="city" aria-required="">City</label>
+            <select name="city" id="city">
+              <option value="city">Please Select City</option>
+            </select>
+          </div>
+          <div class="user-input-box">
+            <label for="state" aria-required="">State</label>
+            <select name="state" id="state" >
+              <option value="state">Please Select State</option>
+            </select>
+          </div>
+          <div class="user-input-box">
+            <label for="country" aria-required="">Country</label>
+            <select name="country" id="country" >
+              <option value="country">Please Select Country</option>
+            </select>
+          </div>
+        </div>
+        <div class="gender-detail-box">
+          <span class="gender-title">Gender<sup>*</sup></span>
+          <div class="gender-category">
+            <input type="radio" name="gender" id="male" value="male" required />
+            <label for="male">Male</label>
+            <input type="radio" name="gender" id="female" value="female" required />
+            <label for="female">Female</label>
+            <input type="radio" name="gender" id="other" value="other" required />
+            <label for="other">Other</label>
+          </div>
+        </div>
+        <br />
+        <div class="user-photo">
+          <label for="photo" aria-required="">
+            <u style="text-decoration-thickness: 1px">Photo</u>
+          </label>
+          <input type="file" id="photo" name="profilePic" placeholder="Photo" accept="image/*"/>
+        </div>
+        <div class="user-resume">
+          <label for="resume" aria-required="">
+            <u style="text-decoration-thickness: 1px">Resume</u>
+          </label>
+          <input type="file" id="resume" name="resume" placeholder="Resume" accept=".pdf" />
+        </div>
+        <div class="user-description">
+          <label for="feedback" aria-required=""
+            ><u style="text-decoration-thickness: 1px">Description</u>:</label
+          ><br />
+        </div>
+        <textarea
+          name="description"
+          rows="7"
+          cols="60"
+          style="font-weight: 500"
+          placeholder="Decribe More About You!!!"
+        ></textarea>
+        <div class="form-submit-btn">
+          <input type="submit" value="Register" />
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
