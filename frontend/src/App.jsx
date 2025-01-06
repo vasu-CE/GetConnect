@@ -10,7 +10,8 @@ import ProfilePage from './components/ProfilePage';
 import Quiz from './components/Quiz';
 import Projects from './components/Projects';
 import ProjectPage from './components/ProjectPage';
-import UserAuth from './auth/userAuth';
+// import UserAuth from './auth/userAuth';
+import UserAuth from './auth/UserAuth.jsx';
 
 // Create a wrapper component to conditionally render Navbar
 const NavbarWrapper = () => {
