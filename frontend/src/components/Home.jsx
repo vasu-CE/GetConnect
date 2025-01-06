@@ -1,5 +1,5 @@
 import React from 'react';
-import PostFeed from './postFeed';
+import PostFeed from './PostFeed.jsx';
 import ProfileSidebar from './ProfileSidebar';
 import Community from './Community';
 
