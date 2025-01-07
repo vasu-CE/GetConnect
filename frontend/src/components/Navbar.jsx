@@ -3,16 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Code2, HomeIcon, LibraryBig, LogOut, MessageCircle, User } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import axios from "axios";
+import { setAuthUser } from "@/redux/authSlice";
 
 function Navbar() {
   const user = useSelector((state) => state.auth.user);
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-
+  const dispatch = useDispatch();
   useEffect(() => {
     const fetchusers = async () => {
       const response =await axios.get(`${import.meta.env.VITE_URL}/search/users` , {withCredentials : true});
@@ -43,6 +44,7 @@ function Navbar() {
       });
       if(response.data.success){
         toast.success("Logout successfully")
+        dispatch(setAuthUser(null));
         navigate('/')
       }else{
         toast.error(response.data.message)
