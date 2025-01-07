@@ -57,7 +57,7 @@ function Login() {
             const endpoint = isSignup 
                 ? `${import.meta.env.VITE_URL}/user/signup`
                 : `${import.meta.env.VITE_URL}/user/login`;
-
+            {console.log(endpoint)}
             const payload = isSignup 
                 ? {
                     userName: input.userName,
