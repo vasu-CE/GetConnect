@@ -42,20 +42,33 @@ const Postcard = ({post}) => {
   },[post.author?._id]);
 
   const likeHandler = async () => {
+    // Optimistic update
+    const newLikedState = !liked;
+    const newCount = newLikedState ? count + 1 : count - 1;
+  
+    setLiked(newLikedState);
+    setCount(newCount);
+  
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_URL}/post/${post._id}/${liked ? "dislike" : "like"}`,
+        `${import.meta.env.VITE_URL}/post/${post._id}/${newLikedState ? "like" : "dislike"}`,
         { withCredentials: true }
       );
-
-      if (response.data.success) {
-        setLiked(!liked);
-        setCount((prevCount) => (liked ? prevCount - 1 : prevCount + 1));
+  
+      if (!response.data.success) {
+        // Revert changes if the API fails
+        setLiked(!newLikedState);
+        setCount(newLikedState ? count - 1 : count + 1);
+        toast.error("Failed to update like state");
       }
     } catch (err) {
-      toast.error(err.message);
+      // Revert changes in case of an error
+      setLiked(!newLikedState);
+      setCount(newLikedState ? count - 1 : count + 1);
+      toast.error("Error liking the post");
     }
   };
+  
 
   const deletePostHandler = async () => {
     try {

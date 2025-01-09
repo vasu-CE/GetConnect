@@ -119,10 +119,13 @@ io.on('connection',socket => {
         }
     })
 
-    socket.on('disconnect' , () => {
-        console.log('disconnect');
+    socket.on('disconnect', () => {
+    console.log(`User disconnected: ${socket.id}`);
+    if (socket.roomId) {
         socket.leave(socket.roomId);
-    });
+    }
+});
+
 });
 
 module.exports = { app, server, io };

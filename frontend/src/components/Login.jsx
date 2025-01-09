@@ -5,7 +5,6 @@ import { Button } from './ui/button'
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
-// import { setAuthUser } from '@/store/authSlice';
 import { setAuthUser } from '@/redux/authSlice';
 import axios from 'axios';
 import Waves from './ReactBeats/Waves';
