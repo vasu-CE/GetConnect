@@ -12,6 +12,7 @@ const postSlice = createSlice({
         },
         appendPost: (state, action) => {
             state.posts.push(action.payload);
+            state.posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         },
         removePost: (state, action) => {
             state.posts = state.posts.filter(post => post._id !== action.payload);
