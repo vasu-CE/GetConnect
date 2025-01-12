@@ -5,36 +5,27 @@ const router = express.Router();
 const upload = require('../../middleware/multer');
 const Post = require('../../model/PostModel');
 const userModel = require('../../model/userModel');
+const redisClient = require('../../services/redis.service');
 
 router.get('/' , isAuthenticate , async (req,res) => {
 
     try{
-    let posts = await Post.find().sort({createdAt : -1})
-    .populate('author', 'userName profilePicture');
-    const authorId=  req.id;
-    const user =await userModel.findById(authorId);
-    // const userInterest = user.interests;
+        const cachedPosts = await redisClient.get('posts');
+
+        if (cachedPosts) {
+            // console.log('Serving posts from Redis cache');
+            return res.status(200).json({
+                success: true,
+                posts: JSON.parse(cachedPosts),
+            });
+        }
+        // console.log('Fetching posts from MongoDB');
+        let posts = await Post.find().sort({ createdAt: -1 })
+            .populate('author', 'userName profilePicture');
+
+        // Cache the posts for 5 minutes (300 seconds)
+        await redisClient.set('posts', JSON.stringify(posts), 'EX', 300);
     
-    // const suggestedPost = posts.filter((post) => {
-    //     // console.log(post.author.interests);
-    //     return post.author.interests 
-    //     && post.author.interests.some((interest) => userInterest.includes(interest));
-    // });
-    // console.log('p');
-    
-    // posts = suggestedPost;
-    
-    
-    // console.log("suggestted" , suggestedPost[0].author.interests);
-    // console.log("suggestted" , suggestedPost.length);
-    // suggestedPost.forEach((post) => {
-    //     console.log(post.author.userName);        
-    // })
-    
-    
-    // console.log('h');
-    // console.log(posts);
-    // return res.status(200).render('homePage' ,{posts , user});
     return res.status(200).json({
         success : true,
         posts

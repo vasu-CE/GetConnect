@@ -4,7 +4,7 @@ const router = express.Router();
 
 const upload = require('../../middleware/multer');
 const Post = require('../../model/PostModel');
-const userModel = require('../../model/userModel');
+const redisClient = require('../../services/redis.service');
 
 router.post('/' , isAuthenticate , upload.single('image') , async (req,res) => {
     try{
@@ -24,17 +24,14 @@ router.post('/' , isAuthenticate , upload.single('image') , async (req,res) => {
         })
 
         await newPost.save();
-        // console.log(newPost);
-        // const user = await userModel.findById(authorId);
-        // user.posts.push(newPost._id);
-        // await user.save();
         const populatedPost = await Post.findById(newPost._id)
         .populate({
             path: 'author',
             select: '_id userName profilePicture'
         });
-        // res.render('profile' , {user});
-        // res.redirect('/post/allpost');
+        const posts = await Post.find().sort({ createdAt: -1 })
+            .populate('author', 'userName profilePicture');
+        await redisClient.set('posts', JSON.stringify(posts), 'EX', 300);
 
         return res.status(200).json({
             message : "Post Successfully",
