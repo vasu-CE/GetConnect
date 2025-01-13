@@ -1,5 +1,5 @@
 // import { label } from '@radix-ui/react-label'
-import React, {Suspense, lazy , useState } from 'react'
+import React, {lazy ,useEffect, useState } from 'react'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { setAuthUser } from '@/redux/authSlice';
 import axios from 'axios';
-import Waves from './ReactBeats/Waves';
+const Waves = lazy(() => import('./ReactBeats/Waves'));
 
 function Login() {
     const [loading, setLoading] = useState(false);
@@ -20,6 +20,13 @@ function Login() {
         mobile: '',
         otp: ''
     });
+    const [showWaves, setShowWaves] = useState(false);
+
+    useEffect(() => {
+        // Delay loading Waves to prioritize initial page render
+        const timer = setTimeout(() => setShowWaves(true), 700);
+        return () => clearTimeout(timer);
+    }, []);
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -96,21 +103,23 @@ function Login() {
 
     return (
         <div className='w-screen h-screen flex justify-center items-center bg-fuchsia-100 relative mt-[-20px]'>
-            <Suspense fallback={<div>Loading...</div>}>
+            {showWaves && (
+                
                 <Waves
-                  lineColor="#999"
-                  backgroundColor="rgba(255, 255, 255, 0.2)"
-                  waveSpeedX={0.02}
-                  waveSpeedY={0.01}
-                  waveAmpX={40}
-                  waveAmpY={20}
-                  friction={0.9}
-                  tension={0.01}
-                  maxCursorMove={120}
-                  xGap={12}
-                  yGap={36}
+                    lineColor="#999"
+                    backgroundColor="rgba(255, 255, 255, 0.2)"
+                    waveSpeedX={0.02}
+                    waveSpeedY={0.01}
+                    waveAmpX={40}
+                    waveAmpY={20}
+                    friction={0.9}
+                    tension={0.01}
+                    maxCursorMove={120}
+                    xGap={12}
+                    yGap={36}
                 />
-            </Suspense>
+            
+        )}
 
 <form onSubmit={submitHandler} className="shadow-lg border border-fuchsia-300 bg-slate-100 flex flex-col gap-2 p-8 pb-2 w-[30vw] absolute">
     <h1 className='text-xl text-center font-bold mb-2'>{isSignup ? 'Signup' : 'Login'}</h1>
