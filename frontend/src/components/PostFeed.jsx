@@ -31,7 +31,41 @@ function PostFeed() {
     },[dispatch])
 
     if (loading) {
-      return <div className="flex items-center justify-center text-2xl h-[80vh]">Loading...</div>;
+      return (
+      <>
+        {Array.from({length : 5 }).map((_,i) => (
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 relative animate-pulse ml-[32vw] w-[34vw]">
+             <div class="absolute top-2 right-2 h-6 w-6 rounded-full bg-gray-200"></div>
+               
+             <div class="flex items-center mb-4 animate-pulse">
+               <div class="rounded-full w-10 h-10 bg-gray-200 mr-3"></div>
+               <div>
+                 <div class="h-3 bg-gray-200 rounded w-24 mb-1"></div>
+                 <div class="h-3 bg-gray-200 rounded w-20"></div>
+               </div>
+             </div>
+               
+             <div class="h-3 bg-gray-200 rounded w-full mb-3"></div>
+               
+             <div class="bg-gray-200 rounded-lg w-full h-56 mb-3"></div>
+               
+             <div class="flex items-center justify-between text-sm text-gray-500 animate-pulse">
+               <div class="flex items-center space-x-1">
+                <div class="h-6 w-6 rounded-full bg-gray-200 mr-2"></div>
+                <div class="w-6 h-3 bg-gray-200 rounded"></div>
+               </div>
+               <div class="flex items-center space-x-1">
+                 <div class="w-6 h-3 bg-gray-200 rounded mr-2"></div>
+                 <div class="w-6 h-3 bg-gray-200 rounded"></div>
+               </div>
+               <div class="flex items-center space-x-1">
+                 <div class="w-6 h-3 bg-gray-200 rounded mr-2"></div>
+                 <div class="w-6 h-3 bg-gray-200 rounded"></div>
+               </div>
+             </div>
+          </div>
+        ))} 
+      </>)
     }
     
     return (
