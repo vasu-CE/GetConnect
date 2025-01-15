@@ -71,18 +71,22 @@ const Postcard = ({post}) => {
   
 
   const deletePostHandler = async () => {
+    dispatch(removePost(post._id));
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_URL}/post/delete/${post._id}`,
         { withCredentials: true }
       );
-
+  
       if (response.data.success) {
         toast.success("Post deleted successfully");
-        console.log(post._id)
-        dispatch(removePost(post._id));
+        console.log(post._id);
+      } else {
+        toast.error("Failed to delete post");
       }
     } catch (err) {
+      // Rollback the optimistic update if the API call fails
+      dispatch(appendPost(post));
       toast.error(err.message);
     }
   };
