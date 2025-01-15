@@ -4,7 +4,7 @@ let socketInstance = null;
 
 const initializeSocket = (projectId) => {
     if (!socketInstance) {
-        socketInstance = io('http://localhost:3000' ,{
+        socketInstance = io(`${import.meta.env.VITE_URL}` ,{
             query : {
                 projectId
             }
