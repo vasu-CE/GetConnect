@@ -18,6 +18,7 @@ const Postcard = ({post}) => {
   const [count, setCount] = useState(post?.likes?.length);
   const [followed, setFollowed] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // Check if the user already likes the post
   useEffect(() => {
@@ -109,7 +110,33 @@ const Postcard = ({post}) => {
       toast.error(err.message);
     }
   };
-  const navigate = useNavigate();
+
+  const calculateTimeDifference = (createdAt) => {
+    const postDate = new Date(createdAt);
+    const currentDate = new Date();
+    const differenceInMilliseconds = currentDate - postDate;
+
+    const seconds = Math.floor(differenceInMilliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+
+    if (years > 0) {
+      return `${years} year${years > 1 ? "s" : ""} ago`;
+    } else if (months > 0) {
+      return `${months} month${months > 1 ? "s" : ""} ago`;
+    } else if (days > 0) {
+      return `${days} day${days > 1 ? "s" : ""} ago`;
+    } else if (hours > 0) {
+      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    } else if (minutes > 0) {
+      return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    } else {
+      return "Just now";
+    }
+  };
   
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 relative">
@@ -156,7 +183,10 @@ const Postcard = ({post}) => {
           <h4 className="text-gray-800 font-medium">
             {post.author?.userName || "John Doe"}
           </h4>
-          <p className="text-gray-500 text-sm">{post?.time || "2 hours ago"}</p>
+          <p className="text-gray-500 text-sm">
+            {post?.createdAt ? calculateTimeDifference(post.createdAt) : "2 hours ago"}
+          </p>
+
         </div>
       </div>
 
