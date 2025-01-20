@@ -1,215 +1,201 @@
-import { setMessages } from "@/redux/chatSlice";
-import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
+"use client"
+
+import { useState, useEffect, useRef } from "react"
+import { useSelector, useDispatch } from "react-redux"
+import { useParams, useNavigate } from "react-router-dom"
+import axios from "axios"
+import { toast } from "sonner"
+import { setMessages } from "@/redux/chatSlice"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Search, Send, UserPlus } from "lucide-react"
 
 const ChatPage = () => {
-  const { id } = useParams();
-  const user = useSelector((state) => state.auth.user);
-  const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [newMessage, setNewMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const { messages } = useSelector((store) => store.chat);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const messagesEndRef = useRef(null);
+  const { id } = useParams()
+  const user = useSelector((state) => state.auth.user)
+  const [users, setUsers] = useState([])
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [newMessage, setNewMessage] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const { messages } = useSelector((store) => store.chat)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const messagesEndRef = useRef(null)
 
-  // Fetch users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_URL}/render/chat/${user._id}`,
-          {
-            withCredentials: true,
-          }
-        );
-          setUsers(response.data.users || []);
-          // console.log("hyy");
-          const selected = response.data.users.find((u) => u._id === id);
-          setSelectedUser(selected || response.data.users?.[0] || null);
+        const response = await axios.get(`${import.meta.env.VITE_URL}/render/chat/${user._id}`, {
+          withCredentials: true,
+        })
+        setUsers(response.data.users || [])
+        const selected = response.data.users.find((u) => u._id === id)
+        setSelectedUser(selected || response.data.users?.[0] || null)
       } catch (err) {
-        toast.error(err.response?.data?.message || "Error fetching users");
+        toast.error(err.response?.data?.message || "Error fetching users")
       }
-    };
-    fetchUsers();
-  }, [user?._id, id]);
+    }
+    fetchUsers()
+  }, [user?._id, id])
 
-  // Fetch messages when selected user changes
   useEffect(() => {
     const fetchMessages = async () => {
-      if (!selectedUser?._id) return;
-      
+      if (!selectedUser?._id) return
+
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_URL}/messages/all/${selectedUser._id}`,
-          { withCredentials: true }
-        );
+        const response = await axios.get(`${import.meta.env.VITE_URL}/messages/all/${selectedUser?._id}`, {
+          withCredentials: true,
+        })
         if (response.data.success) {
-          dispatch(setMessages(response.data.messages || []));
-          
+          dispatch(setMessages({userId : selectedUser?._id , messages : response.data.messages || []}))
         }
       } catch (err) {
-        toast.error(err.response?.data?.message || "Error fetching messages");
+        toast.error(err.response?.data?.message || "Error fetching messages")
       }
-    };
-    fetchMessages();
-  }, [selectedUser?._id, messages ]);
+    }
+    fetchMessages()
+  }, [selectedUser?._id , dispatch])
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
-  // Send message
   const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !selectedUser?._id) return;
+    e.preventDefault()
+    if (!newMessage.trim() || !selectedUser?._id) return
 
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_URL}/messages/send/${selectedUser._id}`,
         { textMessage: newMessage },
-        { withCredentials: true }
-      );
-      // console.log(selectedUser._id)
+        { withCredentials: true },
+      )
 
       if (response.data.success) {
-        dispatch(setMessages([...messages, response.data.newMessage]));
-        setNewMessage("");
-       
+        dispatch(setMessages({
+          userId: selectedUser._id,
+          messages: [...(messages[selectedUser._id] || []), response.data.newMessage]
+        }));
+        setNewMessage("")
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error sending message");
+      toast.error(err.response?.data?.message || "Error sending message")
     }
-  };
+  }
 
-  // Filter users by search query
-  const filteredUsers = users.filter((user) =>
-    user?.userName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) => user?.userName?.toLowerCase().includes(searchQuery.toLowerCase()))
 
-  // Navigate to user profile
   const handleProfileClick = (userId) => {
-    navigate(`/view/${userId}/profile`);
-  };
+    navigate(`/view/${userId}/profile`)
+  }
 
-  // Select chat user
   const handleUserSelect = (selectedUser) => {
-    setSelectedUser(selectedUser);
-    navigate(`/render/chat/${selectedUser._id}`);
-  };
+    setSelectedUser(selectedUser)
+    navigate(`/render/chat/${selectedUser._id}`)
+  }
 
   return (
-    <div className="flex h-[90vh] bg-gray-100 pt-4">
-      {/* Users Sidebar */}
-      <div className="w-1/4 bg-white shadow-lg">
-        <div className="px-4 py-3 bg-gray-300 text-gray-900 font-bold text-center">
-          Chat Users
-        </div>
-        <div className="px-4 py-2 bg-gray-300 border-b">
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 text-sm border rounded-full focus:outline-none"
-          />
-        </div>
-        <div className="overflow-y-auto h-full">
+    <div className="flex h-[89vh] bg-gray-100 mt-5">
+      <Card className="w-80 h-[88vh] rounded-none border-r">
+        <CardHeader className="p-4 space-y-2">
+          <CardTitle>Chats</CardTitle>
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 focus-visible:ring-transparent"
+            />
+          </div>
+        </CardHeader>
+        <ScrollArea className="h-[calc(88vh-8rem)]">
           {filteredUsers.map((user) => (
             <div
               key={user._id}
-              className={`flex items-center p-3 cursor-pointer transition-all ${
-                selectedUser?._id === user._id ? "bg-purple-100" : "hover:bg-gray-100"
+              className={`flex items-center p-4 cursor-pointer transition-colors ${
+                selectedUser?._id === user._id ? "bg-secondary" : "hover:bg-secondary/50"
               }`}
               onClick={() => handleUserSelect(user)}
             >
-              <img
-                src={user.profilePicture || "/default-avatar.png"}
-                alt={user.userName}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div className="ml-3">
-                <p className="text-sm font-semibold">{user.userName}</p>
-                <p className="text-xs text-gray-500">{user.bio || "No bio"}</p>
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={user.profilePicture} alt={user.userName} />
+                <AvatarFallback>{user.userName.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="ml-4">
+                <p className="text-sm font-medium leading-none">{user.userName}</p>
+                <p className="text-sm text-muted-foreground">{user.bio || "No bio"}</p>
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Chat Window */}
-      <div className="flex flex-col w-3/4 bg-gray-50">
+        </ScrollArea>
+      </Card>
+      <div className="flex-1 flex flex-col">
         {selectedUser ? (
           <>
-            {/* Chat Header */}
-            <div
-              onClick={() => handleProfileClick(selectedUser._id)}
-              className="flex items-center px-4 py-3 bg-gray-400 text-white border-b cursor-pointer"
-            >
-              <img
-                src={selectedUser.profilePicture || "/default-avatar.png"}
-                alt={selectedUser.userName}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-              <div className="ml-3">
-                <p className="font-semibold text-lg">{selectedUser.userName}</p>
-                <p className="text-sm">{selectedUser.bio || "No bio"}</p>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-gray-100">
-              {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex ${
-                    msg.senderId === user._id ? "justify-end" : "justify-start"
-                  }`}
-                >
+            <Card className="rounded-none border-b">
+              <CardHeader className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={selectedUser.profilePicture} alt={selectedUser.userName} />
+                      <AvatarFallback>{selectedUser.userName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h2 className="text-lg font-semibold">{selectedUser.userName}</h2>
+                      <p className="text-sm text-muted-foreground">{selectedUser.bio || "No bio"}</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => handleProfileClick(selectedUser._id)}>
+                    <UserPlus className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+            <ScrollArea className="flex-1 p-4 h-[calc(88vh-10rem)]">
+              {messages[selectedUser._id]?.map((msg, index) => (
+                <div key={index} className={`flex ${msg.senderId === user._id ? "justify-end" : "justify-start"} mb-4`}>
                   <div
-                    className={`px-4 py-3 rounded-lg shadow-md max-w-xs ${
-                      msg.senderId === user._id
-                        ? "bg-purple-500 text-white"
-                        : "bg-white text-black"
+                    className={`max-w-[70%] rounded-lg p-3 ${
+                      msg.senderId === user._id ? "bg-gray-800 text-white" : "bg-white text-black"
                     }`}
                   >
                     <p>{msg.message}</p>
-                    <p className="mt-1 text-xs opacity-75">
-                      {new Date(msg.timestamp).toLocaleTimeString()}
-                    </p>
+                    <p className="text-xs opacity-70 mt-1">{new Date(msg.timestamp).toLocaleTimeString()}</p>
                   </div>
                 </div>
               ))}
               <div ref={messagesEndRef} />
-            </div>
-
-            {/* Message Input */}
-            <form onSubmit={sendMessage} className="flex items-center px-4 py-3 bg-white border-t">
-              <input
-                type="text"
-                placeholder="Type a message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:border-purple-500"
-              />
-              <button
-                type="submit"
-                disabled={!newMessage.trim()}
-                className="px-4 py-2 ml-3 font-semibold text-white bg-purple-500 rounded-full hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Send
-              </button>
-            </form>
+            </ScrollArea>
+            <Separator />
+            <CardFooter className="p-4">
+              <form onSubmit={sendMessage} className="flex w-full space-x-2">
+                <Input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  className="flex-1 border border-gray-300 focus-visible:border-gray-400 focus-visible:ring-transparent"
+                />
+                <Button type="submit" size="icon">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </form>
+            </CardFooter>
           </>
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
+          <div className="flex items-center justify-center h-full text-muted-foreground">
             Select a user to start chatting
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ChatPage;
+export default ChatPage
+

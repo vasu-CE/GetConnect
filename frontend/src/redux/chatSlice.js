@@ -11,7 +11,8 @@ const chatSlice = createSlice({
             state.onlineUsers = action.payload;
         },
         setMessages : (state , action) => {
-            state.messages = action.payload;
+            const { userId, messages } = action.payload;
+            state.messages[userId] = messages; 
         }
     }
 })
