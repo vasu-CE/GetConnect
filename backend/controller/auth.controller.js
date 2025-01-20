@@ -8,25 +8,21 @@ dotenv.config();
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+let otpStore = {};
 const sendOTP = async (req , res) => {
-    const {email} = req.body;
-    let user = await userModel.findOne({email});
+        const {email} = req.body;
+        const user = await userModel.findOne({email});
+        if(user){
+            return res.status(400).json({
+                message: 'User already exist',
+                success : true
+            }) 
+        }
 
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 5 * 60000);
-    if(user){
-        user.otp = otp;
-        user.otpExpiry = otpExpiry;
-        user.isVerified = false;
-    }else{
-        user = new userModel({
-            email,
-            otp,
-            otpExpiry,
-            isVerified: false
-        });
-    }
-    await user.save();
+
+    otpStore[email] = { otp, otpExpiry };
 
     const transporter = nodemailer.createTransport({
         service: 'gmail', 
@@ -55,24 +51,6 @@ const sendOTP = async (req , res) => {
     }
 }
 
-async function verifyOTP(user , otp) {
-    // console.log(user.otp);
-    
-    if (user.otp !== otp) {
-        return { success: false, message: "Invalid OTP" };
-    }
-
-    if (new Date() > user.otpExpiry) {
-        return { success: false, message: "OTP expired" };
-    }
-
-    user.otp = null;
-    user.otpExpiry = null;
-    await user.save();
-
-    return { success: true, message: 'OTP verified successfully' };
-}
-
 const signup = async ( req,res ) => {
     try{
         const {userName , email , password , otp} = req.body;
@@ -83,31 +61,41 @@ const signup = async ( req,res ) => {
             });
         }
 
-        const user = await userModel.findOne({email});
-        if (!user) {
+        const otpData = otpStore[email];
+        if (!otpData) {
             return res.status(404).json({
-                message: 'User not found',
+                message: 'OTP not generated for this email',
                 success: false,
             });
         }
 
-        const otpVerification = await verifyOTP(user, otp);
-        if (!otpVerification.success) {
+        if (otpData.otp !== otp) {
             return res.status(401).json({
-                message: otpVerification.message,
-                success: false,
+                message: 'Invalid OTP',
+                success: false
             });
         }
+
+        if (new Date() > otpData.otpExpiry) {
+            return res.status(401).json({
+                message: 'OTP expired',
+                success: false
+            });
+        }
+
         
         const hash = await bcrypt.hash(password , 10);
-        const updatedUser = await userModel.findOneAndUpdate({ email },
-            {
-                userName,
-                password: hash,
-            },
-            { new: true } // Return the updated user
-        );
-        const token = jwt.sign({ userId : user._id }, process.env.JWT_SECRET);
+        const newUser = new userModel({
+            email,
+            userName,
+            password: hash,
+            isVerified: true
+        });
+        await newUser.save();
+
+        delete otpStore[email];
+
+        const token = jwt.sign({ userId : newUser._id }, process.env.JWT_SECRET);
         
         // Set cookie with proper options
         res.cookie("token", token, {
@@ -118,7 +106,7 @@ const signup = async ( req,res ) => {
             maxAge: 24 * 60 * 60 * 1000 // 24 hours
         });
         return res.status(201).json({
-            user: updatedUser,
+            user: newUser,
             message: 'Account created successfully',
             success: true
         }) 
