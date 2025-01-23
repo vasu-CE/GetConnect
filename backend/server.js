@@ -3,6 +3,10 @@ const { app , server} = require('./socket/socket');
 const cors =  require('cors');
 // var app = express();
 const dotenv = require('dotenv');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const session = require('express-session')
+
 dotenv.config({});
 
 // CORS middleware
@@ -11,8 +15,20 @@ app.use(cors({
     credentials: true
 }));
 
-const path = require('path');
-const cookieParser = require('cookie-parser');
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    next();
+});
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+    secret: 'qwerhjj',
+    resave: false,
+    saveUninitialized: true
+}));
 // const userModel = require('./model/userModel');
 const authRouter = require('./router/userRouter/authRouter');
 const profileRouter = require('./router/userRouter/controlle');
@@ -32,16 +48,6 @@ const quiz = require('./router/userRouter/quiz');
 const projectRoutes = require('./router/projectRouter/project.routes')
 const aiRoutes = require('./router/projectRouter/ai.routes')
 
-const session = require('express-session')
-app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.use(session({
-    secret: 'qwerhjj',
-    resave: false,
-    saveUninitialized: true
-}));
 
 app.use('/user',authRouter);
 app.use('/profile' , profileRouter);
@@ -59,7 +65,12 @@ app.use('/projects',projectRoutes);
 app.use('/ai',aiRoutes);
 
 const frontendPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendPath));
+app.use(express.static(frontendPath, {
+    setHeaders: function (res, path) {
+        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+        res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    }
+}));
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
