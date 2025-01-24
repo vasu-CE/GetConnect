@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { useParams, useNavigate } from "react-router-dom"
@@ -7,12 +5,13 @@ import axios from "axios"
 import { toast } from "sonner"
 import { setMessages } from "@/redux/chatSlice"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "./ui/button"
+import { Input } from "./ui/input"
+import { ScrollArea } from "./ui/scroll-area"
+import { Separator } from "./ui/separator"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card"
 import { Search, Send, UserPlus } from "lucide-react"
+
 
 const ChatPage = () => {
   const { id } = useParams()
