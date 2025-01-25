@@ -1,4 +1,4 @@
-import { CircleX, Users } from "lucide-react";
+import { CircleX, Trash2, Users } from "lucide-react";
 import React, { createRef, useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Input } from "./ui/input";
@@ -50,6 +50,8 @@ function ProjectPage() {
   const [iframeUrl , setIframUrl] = useState(null);
 
   const [ runProcess, setRunProcess ] = useState(null) 
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [run , setRun] = useState(false)
 
   useEffect(() => {
     initializeSocket(project._id);
@@ -71,8 +73,17 @@ function ProjectPage() {
       }
       webContainer?.mount(message.fileTree)
       if(message.fileTree){
-        setFileTree(message.fileTree);
-        saveFileTree(message.fileTree); // Save file tree to the database
+        setFileTree((prevFileTree) => {
+          const updatedFileTree = {
+            ...prevFileTree,
+            ...message.fileTree,
+          };
+
+          saveFileTree(updatedFileTree);
+          return updatedFileTree;
+        });
+        // setFileTree(message.fileTree);
+        // saveFileTree(message.fileTree); // Save file tree to the database
       }
       // appendIncomingMsg(data);
       setMessages((prevmessages) => [...prevmessages , data])
@@ -106,7 +117,62 @@ function ProjectPage() {
     });
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]; 
+    if (!file) return;
+  
+    const fileName = file.name;
+    // console.log(file);
+  
+    try {
+      if (fileTree?.[fileName]) {
+        toast.error("File already exists!");
+        return;
+      }
+  
+      // Read the file content
+      const fileContent = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result); // Resolve with the file content
+        reader.onerror = () => reject(reader.error); // Reject on error
+        reader.readAsText(file); // Read the file as text
+      });
+  
+      // Update the file tree
+      const updatedFileTree = {
+        ...fileTree,
+        [fileName]: {
+          file: {
+            contents: fileContent,
+          },
+        },
+      };
+      setFileTree(updatedFileTree);
 
+      await saveFileTree(updatedFileTree);
+  
+      toast.success(`File '${fileName}' uploaded successfully!`);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message);
+    }
+  };
+
+  const handleFileDelete = async (fileName) => {
+    if (!fileTree[fileName]) {
+      toast.error("File not found!");
+      return;
+    }
+
+    const updatedFileTree = { ...fileTree };
+    delete updatedFileTree[fileName];
+
+    setFileTree(updatedFileTree);
+
+    await saveFileTree(updatedFileTree);
+
+    toast.success(`File '${fileName}' deleted successfully!`);
+  };
 
   async function addCollabrators() {
     try {
@@ -267,24 +333,37 @@ function ProjectPage() {
           </div>
         </div>
       </div>
-
+      
       <section className="right bg-red-50 flex-grow h-[89vh] flex">
         <div className="explorer h-full max-w-64 min-w-52 bg-slate-300">
           <div className="file-tree w-full">
-            { fileTree &&
+            <label className="text-center block p-2 px-4 mt-4 w-[92%] ml-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer">
+              Upload File
+              <input
+                type="file"
+                accept=".txt,.js,.json"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
+
+            {fileTree &&
               Object.keys(fileTree).map((file, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setCurrentFile(file)
-                    setOpenFiles([ ...new Set([ ...openFiles, file ]) ])
-                  }}
-                  className="tree-element cursor-pointer p-2 px-4 flex items-center gap-2 bg-slate-300 w-full">
-                  <p
-                      className='font-semibold text-lg'
-                  >{file}</p>
-                </button>))
-            }
+                <div key={index} className="flex items-center gap-2 w-full">
+                  <button
+                    onClick={() => {
+                      setCurrentFile(file);
+                      setOpenFiles([...new Set([...openFiles, file])]);
+                    }}
+                    className="tree-element cursor-pointer p-2 px-4 flex items-center gap-2 bg-slate-300 w-full"
+                  >
+                    <p className="font-semibold text-lg">{file}</p>
+                  </button>
+                  
+                  <Trash2 onClick={() => handleFileDelete(file)} className="text-red-500 cursor-pointer mr-5" />
+                </div>
+              ))}
+
           </div>
         </div>
 
@@ -292,42 +371,59 @@ function ProjectPage() {
 
           <div className="top flex justify-between w-full">
             
-            <div className="files flex">
-              {
-                openFiles.map((file, index) => (
+          <div className="files flex">
+            {
+              openFiles.map((file, index) => (
+                <div key={index} className={`flex items-center gap-2  bg-slate-300 ${currentFile === file ? 'bg-slate-400' : ''}`}>
                   <button
-                      key={index}
-                      onClick={() => setCurrentFile(file)}
-                      className={`open-file cursor-pointer p-2 px-4 flex items-center w-fit gap-2 bg-slate-300 ${currentFile === file ? 'bg-slate-400' : ''}`}>
-                      <p
-                          className='font-semibold text-lg'
-                      >{file}</p>
+                    onClick={() => setCurrentFile(file)}
+                    className="open-file cursor-pointer p-2 px-4 flex items-center w-fit"
+                  >
+                    <p className="font-semibold text-lg">{file}</p>
                   </button>
-               ))
-              }
-            </div>
+                  <button
+                  
+                    onClick={() => {
+                      setOpenFiles(openFiles.filter(temp => temp!=file));
+                      setCurrentFile(null);
+                    }}
+                    
+                    className="text-red-500 cursor-pointer"
+                  >
+                    <CircleX size={"20px"} />
+                  </button>
+                </div>
+              ))
+            }
+          </div>
 
             <div className="actions flex gap-2">
               <button
                 onClick={async () => {
                   try {
+                    setIsInstalling(true);
                     await webContainer.mount(fileTree)
                     // Check if package.json exists before running npm install and start
                     if (!fileTree['package.json']) {
                       toast.error("package.json not found. Please create a package.json file before running npm install and start.");
+                      setIsInstalling(false);
                       return;
                     }
                     
                     const installProcess = await webContainer.spawn("npm", ["install"])
                     installProcess.output.pipeTo(new WritableStream({
                         write(chunk) {
-                            console.log(chunk)
+                          console.log(chunk)
                         }
                     }))
+
+                    await installProcess.exit;
+                    setRun(true);
+
                     if (runProcess) {
                       runProcess.kill()
                     }
-                    let tempRunProcess = await webContainer.spawn("npm", [ "start" ]);
+                    let tempRunProcess = await webContainer.spawn("npm", [ "start" ]);                
 
                     tempRunProcess.output.pipeTo(new WritableStream({
                         write(chunk) {
@@ -344,12 +440,14 @@ function ProjectPage() {
                     })
                   } catch (error) {
                     console.error("Error running npm install or start:", error);
-                    // Suggestion: Consider adding a more user-friendly error message or handling for the user.
+                  }finally {
+                    setIsInstalling(false);
                   }
                 }}
-                className="p-2 px-6 mt-5 mr-5 bg-slate-900 text-white"
+                disabled={isInstalling}
+                className={`p-2 px-6 mt-5 mr-5 bg-slate-900 text-white ${isInstalling ? "cursor-not-allowed" : ""}`}
               >
-                Run
+                {isInstalling ? "Installing..." : run ? "Run" : "Build"}
               </button>
             </div>
           </div>
@@ -447,7 +545,7 @@ function ProjectPage() {
             </div>
             <button
               onClick={addCollabrators}
-              className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-blue-600 text-white rounded-md"
+              className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-blue-600 text-white rounded-md`}
             >
               Add Collaborators
             </button>
