@@ -4,16 +4,17 @@ const User = require('../../model/userModel');
 const isAuthenticate = require('../../middleware/isAuthenticate');
 
 const availableTechInterests = [
-    'Web Development', 'JavaScript', 'Python', 'Java', 'Node.js', 'Express.js', 'React.js', 'Vue.js', 'CSS', 'HTML', 'SQL', 'MongoDB', 'Firebase', 'GraphQL', 
-    'Machine Learning', 'Data Science', 'Artificial Intelligence', 'Deep Learning', 'Blockchain', 'Cybersecurity', 'Game Development', 'Mobile App Development', 
-    'Android Development', 'iOS Development', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'PHP', 'Swift', 'Kotlin', 'TypeScript', 'Cloud Computing', 'AWS', 'Azure', 
-    'Google Cloud', 'Linux', 'DevOps', 'Software Testing', 'Agile', 'Scrum', 'Project Management', 'UI/UX Design', 'Software Architecture', 'DevSecOps', 
-    'Database Management', 'Big Data', 'Data Analytics', 'Business Intelligence', 'Serverless Computing', 'Virtualization', 'IoT (Internet of Things)', 
-    'Embedded Systems', 'Networking', 'Database Administration', 'Continuous Integration', 'Continuous Deployment', 'Tech Startups', 'E-commerce', 'SEO for Developers', 
-    'Automated Testing', 'Cloud Security', 'Containerization', 'Microservices', 'API Development', 'Serverless Architecture', 'JavaScript Frameworks', 
-    'Agile Development', 'Software Development', 'Ruby on Rails', 'React Native', 'Flutter', 'Testing Frameworks', 'GraphQL API', 'API Testing', 'Tech Innovations', 
-    'Virtual Reality', 'Augmented Reality', '5G Technology', 'Quantum Computing', 'Robotic Process Automation (RPA)', 'Wearable Tech', 'Edge Computing', 'Tech for Good'
+    '5G Technology', 'Agile', 'Agile Development', 'Android Development', 'API Development', 'API Testing', 'Artificial Intelligence', 'Augmented Reality', 
+    'Automated Testing', 'Big Data', 'Blockchain', 'Business Intelligence', 'Cloud Computing', 'Cloud Security', 'Containerization', 'Continuous Deployment', 
+    'Continuous Integration', 'C++', 'C#', 'Cybersecurity', 'Data Analytics', 'Data Science', 'Database Administration', 'Database Management', 'Deep Learning', 
+    'DevOps', 'DevSecOps', 'E-commerce', 'Edge Computing', 'Embedded Systems', 'Express.js', 'Firebase', 'Flutter', 'Game Development', 'Go', 'GraphQL', 
+    'GraphQL API', 'Google Cloud', 'HTML', 'IoT (Internet of Things)', 'Java', 'JavaScript', 'JavaScript Frameworks', 'Kotlin', 'Linux', 'Machine Learning', 
+    'Microservices', 'MongoDB', 'Node.js', 'PHP', 'Project Management', 'Python', 'Quantum Computing', 'React Native', 'React.js', 'Robotic Process Automation (RPA)', 
+    'Ruby', 'Ruby on Rails', 'Rust', 'Serverless Architecture', 'Serverless Computing', 'Scrum', 'Software Architecture', 'Software Development', 'Software Testing', 
+    'Tech for Good', 'Tech Innovations', 'Tech Startups', 'Testing Frameworks', 'TypeScript', 'UI/UX Design', 'Virtual Reality', 'Virtualization', 'Vue.js', 
+    'Wearable Tech', 'Web Development', 'Networking', 'SQL', 'Swift', 'Testing Frameworks', 'TypeScript', 'Azure'
 ];
+
   
 router.get('/edit',isAuthenticate ,async (req,res) => {
     const authorId = req.id;
@@ -44,14 +45,6 @@ router.get('/resume/:id' ,async (req,res) => {
     }
 })
 
-//     const userId = req.params.userId;
-//     const user = await User.findById(userId);
-  
-//     if (!user || !user.resume) {
-//       return res.status(404).send('Resume not found');
-//     }
-//     res.send(user.resume);
-// });
 router.get('/resume1/:id' , (req,res) => {
     const authorId = req.params.id;
     // const author = User.findById(authorId);
@@ -71,13 +64,12 @@ router.get('/chat/:id' ,isAuthenticate ,async (req,res) => {
 })
 
 router.get('/interests',isAuthenticate,async (req,res) => {
-    // res.json(availableTechInterests);
     const userId = req.id;
     const user = await User.findById(userId);
-
-    const oldInterest = availableTechInterests.filter((interest) => interest==user.interests);
-    const newInterest = availableTechInterests.filter((interest) => interest!=user.interests);
-
+   
+    const oldInterest = availableTechInterests.filter((interest) => user.interests.includes(interest));
+    const newInterest = availableTechInterests.filter((interest) => !user.interests.includes(interest));
+    // console.log(oldInterest)
     res.send({oldInterest , newInterest});
 
 })
