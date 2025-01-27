@@ -39,30 +39,39 @@ router.get('/' , isAuthenticate , async (req,res) => {
     }
 })
 
-router.get('/:domain' , isAuthenticate ,async (req,res) => {
+router.post('/interests' , isAuthenticate ,async (req,res) => {
     try{
-        const userInterest = req.params.domain;
+        const userInterest = req.body.userInterest;
         // console.log(userInterest);
+        // console.log("hyy");
+        if (userInterest.length === 0) {
+            let posts = await Post.find().sort({ createdAt: -1 }).populate('author', 'userName profilePicture interests');
+            return res.status(200).json({
+              success: true,
+              posts,
+            });
+          }
         let posts = await Post.find().sort({createdAt : -1})
         .populate('author', 'userName profilePicture interests');
     
-        const suggestedPost = posts.filter((post) => {  
-            return post.author.interests 
-            && post.author.interests
-            .map(interest => interest.trim().replace(" " , '').toLowerCase())
-            .includes(userInterest)
+        const suggestedPost = posts.filter((post) => {
+            return post.author.interests && post.author.interests.some((interest) => {
+              return userInterest
+                .map((interest) => interest.trim().replace(" ", '').toLowerCase())
+                .includes(interest.trim().replace(" ", '').toLowerCase());
+            });
         });
 
         posts = suggestedPost;
-        // console.log(suggestedPost[0].author);
 
-        const authorId=  req.id;
-        const user =await userModel.findById(authorId);
-
-        return res.status(200).render('homePage' ,{posts , user});
+        return res.status(200).json({
+            success : true,
+            posts
+        })
     }catch(err){
         res.send(err.message);
     }
 })
+
 
 module.exports = router;
