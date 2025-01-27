@@ -36,13 +36,19 @@ router.post('/edit', isAuthenticate ,upload.fields([
             user.profilePicture = `data:image/jpeg;base64,${base64}`;
         }
 
-        // const interest = req.body.interest;
+        // const interest = req.body.interest 
         if (interests) {
-            user.interests.push(...interests);  // Adds multiple interests
+            user.interests.push(...interests);
         }        
 
-        if(deleteInterest){
-            user.interests.pull(deleteInterest);
+        if (deleteInterest) {
+            if (Array.isArray(deleteInterest)) {
+                deleteInterest.forEach((interest) => {
+                    user.interests.pull(interest);
+                });
+            } else {
+                user.interests.pull(deleteInterest);
+            }
         }
 
         if(resume && resume.length > 0){
@@ -56,7 +62,7 @@ router.post('/edit', isAuthenticate ,upload.fields([
         await user.save();
         // console.log("Success");
         return res.status(200).json({
-            message : "Edit successfulyy",
+            message : "Edit successfully",
             success : true,
             user
         });
