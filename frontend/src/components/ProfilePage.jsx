@@ -1,225 +1,226 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { Button } from "./ui/button";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { toast } from "sonner";
-import CreatePost from "./CreatePost";
-import { useSelector } from "react-redux";
-import { FileUser, Images, Sparkles, University } from "lucide-react";
+import React, { useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useSelector } from "react-redux"
+import axios from "axios"
+import { toast } from "sonner"
+import { User, Book, FileText, Zap, ImageIcon, MessageCircle, Award, Users, Mail, Plus } from "lucide-react"
 
 const ProfilePage = () => {
-  const author = useSelector((state) => state.auth.user);
-  const { id } = useParams();
-  const [user, setUser] = useState({});
-  const [posts, setPosts] = useState([]);
+  const author = useSelector((state) => state.auth.user)
+  const { id } = useParams()
+  const [user, setUser] = useState({})
+  const [posts, setPosts] = useState([])
+  const [followed, setFollowed] = useState(false);
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_URL}/view/${id}/profile`,
-          { withCredentials: true }
-        );
-
+        const response = await axios.get(`${import.meta.env.VITE_URL}/view/${id}/profile`, { withCredentials: true })
         if (response.data.success) {
-          setUser(response.data.author);
-          console.log(user);
-          setPosts(response.data.posts);
+          setUser(response.data.author)
+          setPosts(response.data.posts)
         } else {
-          toast.error(response.data.message);
+          toast.error(response.data.message)
         }
       } catch (err) {
-        toast.error(err.message);
+        toast.error(err.message)
       }
-    };
-    fetchProfile();
-  }, [id]);
+    }
+    fetchProfile()
+  }, [id])
 
-  const resumeHandeler = async () => {
+  const resumeHandler = async () => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_URL}/render/resume/${id}`
-      );
+      const response = await axios.get(`${import.meta.env.VITE_URL}/render/resume/${id}`)
       if (response.data.success) {
-        const resumeData = response.data.resumeImg;
-        const newTab = window.open();
-        newTab.document.write(
-          '<iframe src="' +
-            resumeData +
-            '" width="100%" height="100%" style="border:none;"></iframe>'
-        );
+        const resumeData = response.data.resumeImg
+        const newTab = window.open()
+        newTab.document.write(`<iframe src="${resumeData}" width="100%" height="100%" style="border:none;"></iframe>`)
       } else {
-        toast.error(response.data.message);
+        toast.error(response.data.message)
+      }
+    } catch (err) {
+      toast.error(err.message)
+    }
+  }
+
+  const messageHandler = () => {
+    navigate(`/render/chat/${id}`)
+  }
+
+  const followHandler = async () => {
+    const prevFollowed = followed;
+    setFollowed(!prevFollowed);
+    try {
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_URL}/user/connection/${id}`,
+        {},
+        { withCredentials: true }
+      );
+
+      if (!data.success) {
+        setFollowed(prevFollowed);
+        toast.error(data.message);
       }
     } catch (err) {
       toast.error(err.message);
     }
   };
 
-  const navigate = useNavigate();
-  const messageHandeler = () => {
-    navigate(`/render/chat/${id}`);
-  };
-
   const formatTimeDifference = (createdAt) => {
-    const postDate = new Date(createdAt);
-    const currentDate = new Date();
-    const differenceInMilliseconds = currentDate - postDate;
-
-    const seconds = Math.floor(differenceInMilliseconds / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const months = Math.floor(days / 30);
-    const years = Math.floor(days / 365);
-
-    if (years > 0) {
-      return `${years} year${years > 1 ? "s" : ""} ago`;
-    } else if (months > 0) {
-      return `${months} month${months > 1 ? "s" : ""} ago`;
-    } else if (days > 0) {
-      return `${days} day${days > 1 ? "s" : ""} ago`;
-    } else if (hours > 0) {
-      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-    } else if (minutes > 0) {
-      return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
-    } else {
-      return "Just now";
-    }
-  };
+    const diff = new Date() - new Date(createdAt)
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
+    if (days > 0) return `${days}d ago`
+    if (hours > 0) return `${hours}h ago`
+    if (minutes > 0) return `${minutes}m ago`
+    return "Just now"
+  }
 
   return (
-    <div className="bg-white shadow-lg rounded-xl w-full overflow-hidden">
-      {/* Profile Header */}
-      <div
-        className="relative text-gray-900 p-8 flex justify-center flex-col sm:flex-row items-center gap-6"
-        style={{
-          backgroundImage: "url('/bg.png')", // Path to your background image
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <img
-          src={user?.profilePicture || "defaultProfilePic.jpg"}
-          alt="Profile"
-          className="w-36 h-36 rounded-full border-4 border-white shadow-md object-cover"
-        />
-        <div>
-          <h1 className="text-3xl font-semibold">{user?.userName}</h1>
-          <p className="text-lg mt-2">{user?.bio || "No bio available."}</p>
-          <p className="font-bold mt-1">Score : {user?.score || 0}</p>
-          <p className="text-sm mt-1">
-            <strong>Connections:</strong> {user?.connection?.length || 0}
-          </p>
+    <div className="bg-gray-100 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+          {/* Header */}
+          <div className="relative h-48 bg-gradient-to-r from-blue-500 to-indigo-600">
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-black bg-opacity-50 text-white">
+              <h1 className="text-3xl font-bold">{user?.userName}</h1>
+              <p className="mt-2 text-lg">{user?.bio || "No bio available."}</p>
+            </div>
+          </div>
 
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-[2vw] ml-[37vw] p-6 border-t-2 border-gray-100">
-        {author._id === id && (
-          <CreatePost className="bg-blue-600 w-[10vw] text-white hover:bg-blue-500 transition-all rounded-lg px-6 py-3 text-lg" />
-        )}
-        <Button
-          onClick={messageHandeler}
-          className="bg-transparent text-gray-800 hover:bg-gray-100 border-2 border-gray-800 rounded-lg px-6 py-3 text-lg"
-        >
-          Message
-        </Button>
-      </div>
-
-      {/* Profile Details */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 p-8">
-        {/* Education */}
-        <div className="bg-gray-100 rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-semibold text-gray-800 flex gap-2 items-center">
-            <University color="blue" />
-            Education
-          </h2>
-          <p className="mt-2 text-gray-600">Charusat University</p>
-        </div>
-
-        {/* Resume */}
-        <div className="bg-gray-100 rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-semibold text-gray-800 flex gap-2 items-center">
-            <FileUser color="blue" />
-            Resume
-          </h2>
-          {user?.resume ? (
-            <Button
-              onClick={resumeHandeler}
-              className="mt-4 bg-blue-700 text-white hover:bg-blue-600 transition-all px-6 py-3 rounded-lg"
-            >
-              View Resume
-            </Button>
-          ) : (
-            <div className="pt-2 text-gray-600">No resume Available</div>
-          )}
-        </div>
-      </div>
-
-      {/* Interests */}
-      <div className="p-8 ml-2">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex gap-2 items-center">
-          <Sparkles color="blue" />
-          Interests
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          {user?.interests?.length ? (
-            user?.interests.map((interest, index) => (
-              <span
-                key={index}
-                className="bg-gray-200 text-gray-700 px-6 py-3 rounded-full text-lg font-medium hover:bg-gray-300 transition-all"
-              >
-                {interest}
-              </span>
-            ))
-          ) : (
-            <span className="text-gray-600">No interests available.</span>
-          )}
-        </div>
-      </div>
-
-      {/* Posts Section */}
-      <div className="p-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4 flex gap-2 items-center">
-          <Images color="blue" />
-          Posts
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.length > 0 ? (
-            posts.map((post) => (
-              <div
-                key={post._id}
-                className="bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 ease-in-out"
-              >
-                <div className="relative w-full h-64 overflow-hidden">
-                  <img
-                    src={post.image}
-                    alt="Post"
-                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300 ease-in-out"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-gray-800">
-                    {user.userName}
-                  </h3>
-                  <p className="text-gray-600 mt-2">
-                    {post.caption || "No caption"}
-                  </p>
-                  <p className="text-gray-500 text-sm mt-2">
-                    {post?.createdAt ? formatTimeDifference(post.createdAt) : "Unknown time"}
-                  </p>
+          {/* Profile Content */}
+          <div className="p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center space-x-4">
+                <img
+                  src={user?.profilePicture || "/defaultProfilePic.jpg"}
+                  alt={user?.userName}
+                  className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
+                />
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <Award className="text-yellow-500" />
+                    <span className="font-semibold">Score: {user?.score || 0}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Users className="text-blue-500" />
+                    <span>Connections: {user?.connection?.length || 0}</span>
+                  </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <span className="text-gray-600">No posts available.</span>
-          )}
+              <div className="flex space-x-4">
+                {author._id === id ? (
+                  <button className="bg-green-500 text-white px-4 py-2 rounded-full flex items-center space-x-2 hover:bg-green-600 transition duration-300">
+                    <Plus size={20} />
+                    <span>Create Post</span>
+                  </button>
+                ) : (
+                  followed ? (
+                    <button onClick={followHandler} className="bg-red-500 text-white px-4 py-2 rounded-full flex items-center space-x-2 hover:bg-red-700 transition duration-300">
+                      <span>Unfollow</span>
+                    </button>
+                  ) : (
+                    <button onClick={followHandler} className="bg-green-500 text-white px-4 py-2 rounded-full flex items-center space-x-2 hover:bg-green-600 transition duration-300">
+                      <span>Follow</span>
+                    </button>
+                  )
+                )}
+                
+                <button
+                  onClick={messageHandler}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-full flex items-center space-x-2 hover:bg-blue-600 transition duration-300"
+                >
+                  <Mail size={20} />
+                  <span>Message</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Education and Resume */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-50 p-4 rounded-lg shadow">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <Book className="mr-2 text-blue-500" />
+                  Education
+                </h2>
+                <p className="mt-2">Charusat University</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg shadow">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <FileText className="mr-2 text-blue-500" />
+                  Resume
+                </h2>
+                {user?.resume ? (
+                  <button
+                    onClick={resumeHandler}
+                    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
+                  >
+                    View Resume
+                  </button>
+                ) : (
+                  <p className="mt-2 text-gray-600">No resume available</p>
+                )}
+              </div>
+            </div>
+
+            {/* Interests */}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold flex items-center">
+                <Zap className="mr-2 text-yellow-500" />
+                Interests
+              </h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {user?.interests?.length ? (
+                  user.interests.map((interest, index) => (
+                    <span key={index} className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm">
+                      {interest}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-600">No interests available.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Posts */}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold flex items-center mb-4">
+                <ImageIcon className="mr-2 text-green-500" />
+                Posts
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {posts.length > 0 ? (
+                  posts.map((post) => (
+                    <div
+                      key={post._id}
+                      className="bg-white rounded-lg shadow-md overflow-hidden"
+                    >
+                      <img src={post.image || "/placeholder.svg"} alt="Post" className="w-full h-48 object-cover" />
+                      <div className="p-4">
+                        <p className="text-gray-800 font-medium">{post.caption || "No caption"}</p>
+                        <div className="mt-2 flex justify-between items-center text-sm text-gray-500">
+                          <span>{formatTimeDifference(post.createdAt)}</span>
+                          <div className="flex items-center">
+                            <MessageCircle size={16} className="mr-1" />
+                            <span>{post.comments?.length || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-600 col-span-3">No posts available.</p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ProfilePage;
+export default ProfilePage
