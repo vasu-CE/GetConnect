@@ -140,8 +140,8 @@ function Community() {
   
 
   return (
-    <div className="w-full bg-background p-6 rounded-lg shadow-md space-y-6">
-      <h3 className="text-xl font-bold mb-4">GetConnect Community</h3>
+    <div className="w-full bg-background p-6 rounded-lg shadow-md">
+      <h3 className="text-xl font-bold mb-4">Community</h3>
   
       {/* Search Bar */}
       <Input
@@ -149,7 +149,7 @@ function Community() {
         placeholder="Search interests..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full focus-visible:ring-transparent focus-visible:border-gray-400 border-2"
+        className="w-full mb-4 focus-visible:ring-transparent focus-visible:border-gray-400 border-2"
       />
   
       {/* Selected Interests */}
@@ -199,4 +199,3 @@ function Community() {
 }
 
 export default Community
-
