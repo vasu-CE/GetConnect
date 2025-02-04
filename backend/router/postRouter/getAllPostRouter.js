@@ -10,10 +10,7 @@ router.get('/' , isAuthenticate , async (req,res) => {
         // console.log('Fetching posts from MongoDB');
         let posts = await Post.find().sort({ createdAt: -1 })
             .populate('author', 'userName profilePicture')
-            .populate({
-                path: 'comments.user',
-                select: 'userName profilePicture'
-            });
+            
 
     
     return res.status(200).json({
