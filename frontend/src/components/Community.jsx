@@ -168,7 +168,7 @@ function Community() {
       )}
   
       {/* Interests Grid */}
-      <div className="interestList grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-4 overflow-auto max-h-[46vh]">
+      <div className={`interestList grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-4 overflow-auto ${showAll ? "max-h-[52vh]" : "max-h-[46vh]"}`}>
         {displayedInterests.length > 0 ? (
           displayedInterests.map((interest) => (
             <Button

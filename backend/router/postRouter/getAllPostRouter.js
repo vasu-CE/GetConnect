@@ -1,18 +1,20 @@
 const express = require('express');
 const isAuthenticate = require('../../middleware/isAuthenticate');
 const router = express.Router();
+
 const Post = require('../../model/PostModel');
-const redisClient = require('../../services/redis.service');
 
 router.get('/' , isAuthenticate , async (req,res) => {
 
+    // console.log("hyy");
     try{
-        // console.log('Fetching posts from MongoDB');
         let posts = await Post.find().sort({ createdAt: -1 })
-            .populate('author', 'userName profilePicture')
-            
-
-    
+        .populate('author', 'userName profilePicture')
+        .populate({
+            path : 'comments.user',
+            select : 'userName profilePicture'
+        });
+        
     return res.status(200).json({
         success : true,
         posts
@@ -39,7 +41,11 @@ router.post('/interests' , isAuthenticate ,async (req,res) => {
             });
           }
         let posts = await Post.find().sort({createdAt : -1})
-        .populate('author', 'userName profilePicture interests');
+        .populate('author', 'userName profilePicture interests')
+        .populate({
+            path : 'comments.user',
+            select : 'userName profilePicture'
+        });;
     
         const suggestedPost = posts.filter((post) => {
             return post.author.interests && post.author.interests.some((interest) => {
@@ -59,6 +65,5 @@ router.post('/interests' , isAuthenticate ,async (req,res) => {
         res.send(err.message);
     }
 })
-
 
 module.exports = router;

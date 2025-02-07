@@ -69,7 +69,7 @@ function PostFeed() {
     }
     
     return (
-      <div className="flex flex-col gap-6 ml-[32vw] w-[34vw]">
+      <div className="flex flex-col gap-6 ml-[32vw] w-[34vw] mb-10">
         {posts?.length > 0 ? (
         posts.map((post) => <Postcard key={post._id} post={post}/>)
       ) : (

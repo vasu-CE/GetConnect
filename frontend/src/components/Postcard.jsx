@@ -8,39 +8,26 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Heart, MoreVertical } from "lucide-react";
+import { Heart, MessageSquare, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { removePost } from "../redux/PostSlice";
+import { removePost, setPosts } from "../redux/PostSlice";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 
 const Postcard = ({post}) => {
-  const user = useSelector((state) => state.auth.user);
-  const [liked, setLiked] = useState(false);
+  const {user} = useSelector((state) => state.auth);
+  const {posts} = useSelector((state) => state.post);
+  const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
   const [count, setCount] = useState(post?.likes?.length);
-  const [followed, setFollowed] = useState(false);
+  const [followed, setFollowed] = useState(user?.connection.includes(post.author?._id));
+
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState(post?.comments || []);
+  const [commentText, setCommentText] = useState("");
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  // Check if the user already likes the post
-  useEffect(() => {
-    setLiked(post.likes?.includes(user._id));
-  }, [post.likes, user._id]);
-
-  useEffect(() => {
-    const fetchFollowState = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_URL}/user/is-following/${post.author._id}`,
-          { withCredentials: true }
-        );
-        if (response.data.success) {
-          setFollowed(response.data.isFollowing);
-        }
-      } catch (err) {
-        toast.error("Error fetching follow state");
-      }
-    };
-    fetchFollowState();
-  },[post.author?._id]);
 
   const likeHandler = async () => {
     // Optimistic update
@@ -60,6 +47,14 @@ const Postcard = ({post}) => {
         // Revert changes if the API fails
         setLiked(!newLikedState);
         setCount(newLikedState ? count - 1 : count + 1);
+
+        const updatePostData = posts.map(p => 
+          p.id === post._id ? {
+            ...p,
+            likes : liked ? p.likes.filter(id => id !== user._id) : [...p.likes, user._id]
+          } :p
+        )
+        dispatch(setPosts(updatePostData));
         toast.error("Failed to update like state");
       }
     } catch (err) {
@@ -110,6 +105,41 @@ const Postcard = ({post}) => {
       toast.error(err.message);
     }
   };
+
+  const commentHandeler = async () => {
+    try{
+      if (!commentText.trim()) return;
+      
+      const tempComment = {
+        _id : Date.now().toString(),
+        text : commentText,
+        user : {
+          userName : user.userName,
+          profilePicture : user.profilePicture
+        },
+        createdAt: new Date().toISOString(),
+      }
+
+      setComments(prevComments => [...prevComments, tempComment]);
+      setCommentText("");
+      const response = await axios.post(`${import.meta.env.VITE_URL}/post/${post._id}/comment`,
+        {message : commentText},
+        {withCredentials : true},
+      )
+
+      if (response.data.success) {
+        setComments(response.data.comments);
+      } else {
+        setComments(prevComments => 
+          prevComments.filter(comment => comment._id !== tempComment._id)
+        );
+        toast.error("Failed to post comment");
+      }
+      console.log(comments);
+    }catch(err){
+      toast.error(err.message);
+    }
+  }
 
   const calculateTimeDifference = (createdAt) => {
     const postDate = new Date(createdAt);
@@ -208,10 +238,47 @@ const Postcard = ({post}) => {
           {liked ? <Heart fill="red" strokeWidth={0} /> : <Heart />}
           <div className="text-black text-md">{count}</div>
         </button>
-        <button className="flex items-center space-x-1 hover:text-gray-800 transition">
-          <span>💬</span>
-          <span>Comment</span>
-        </button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className="flex items-center space-x-1 hover:text-gray-800 transition">
+              💬
+              <span>Comment</span>
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogTitle>Comments</DialogTitle>
+            <div className="max-h-60 overflow-y-auto p-2">
+              {comments.length > 0 ? comments.map(comment => (
+                
+                  <div key={comment._id} className="flex items-center space-x-3 p-2 mb-2 bg-gray-100 rounded-lg shadow-sm"> 
+                    <img 
+                      src={comment.user.profilePicture} 
+                      alt={comment.user.userName} 
+                      className="w-10 h-10 rounded-full border-2 border-blue-500 object-cover"
+                    />
+                    {console.log(comment)}
+                    {/* Comment Content */}
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-semibold text-gray-800">{comment.user.userName}</h4>
+                        <small className="text-gray-500 text-xs">{calculateTimeDifference(comment.createdAt)}</small>
+                      </div>
+                      <p className="text-gray-700 text-sm">{comment.text}</p>
+                    </div>
+                  </div>
+                ))
+               : <p className="text-center text-gray-500">No comments yet</p>}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Write a comment..."
+              />
+              <Button onClick={commentHandeler}>Post</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         <button className="flex items-center space-x-1 hover:text-gray-800 transition">
           <span>🔗</span>
           <span>Share</span>
