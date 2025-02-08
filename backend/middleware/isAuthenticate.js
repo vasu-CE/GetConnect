@@ -1,8 +1,7 @@
 const jwt = require('jsonwebtoken');
-const redisClient = require('../services/redis.service');
 
 const isAuthenticate =async (req, res, next) => {
-    const jwtSecret = "sdfgfdge";
+    const jwtSecret = process.env.JWT_SECRET;
     try {
         const token = req.cookies.token;
         // console.log(req.cookies);
@@ -12,12 +11,6 @@ const isAuthenticate =async (req, res, next) => {
                 success: false
             });
         } 
-
-        const isBlackListed = await redisClient.get(token);
-        if (isBlackListed) {
-            res.cookie('token', '');
-            return res.status(401).send({ error: 'Unauthorized User' });
-        }
 
         const decode = jwt.verify(token, jwtSecret);
         req.id = decode.userId;
