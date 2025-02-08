@@ -3,10 +3,6 @@ import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Badge } from "./ui/badge"
 import { X } from "lucide-react"
-import { toast } from "sonner"
-import axios from "axios"
-import { useDispatch } from "react-redux"
-import { setPosts } from "@/redux/PostSlice"
 
 const availableTechInterests = [
   "Web Development",
@@ -96,11 +92,9 @@ const availableTechInterests = [
   "Tech for Good",
 ]
 
-function Community() {
+function Community({ selectedInterests, setSelectedInterests }) {
   const [search, setSearch] = useState("")
-  const [selectedInterests, setSelectedInterests] = useState([])
   const [showAll, setShowAll] = useState(false)
-  const dispatch = useDispatch();
 
   const filteredInterests = useMemo(() => {
     return availableTechInterests.filter((interest) => interest.toLowerCase().includes(search.toLowerCase()))
@@ -110,34 +104,12 @@ function Community() {
 
   const toggleInterest = (interest) => {
     setSelectedInterests((prev) => (prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]))
+    // console.log("length" + selectedInterests.length);
   }
 
   const clearSelection = () => {
     setSelectedInterests([])
   }
-
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_URL}/post/allpost/interests`,
-          { userInterest: selectedInterests },
-          { withCredentials: true }
-        );
-        
-
-        if (response.data.success) {
-          dispatch(setPosts(response.data.posts));
-        }
-      } catch (err) {
-        toast.error(err.message);
-      }
-    };
-
-    fetchPosts();
-  }, [selectedInterests])
-  
 
   return (
     <div className="w-full bg-background p-6 rounded-lg shadow-md">

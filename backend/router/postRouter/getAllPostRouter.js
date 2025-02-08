@@ -4,66 +4,56 @@ const router = express.Router();
 
 const Post = require('../../model/PostModel');
 
-router.get('/' , isAuthenticate , async (req,res) => {
-
-    // console.log("hyy");
-    try{
-        let posts = await Post.find().sort({ createdAt: -1 })
-        .populate('author', 'userName profilePicture')
-        .populate({
-            path : 'comments.user',
-            select : 'userName profilePicture'
-        });
-        
-    return res.status(200).json({
-        success : true,
-        posts
-    })
-    } catch(err){
-        // res.send(err.message);
-        return res.status(404).json({
-            message : err.message,
-            success : false
-        })
-    }
-})
-
-router.post('/interests' , isAuthenticate ,async (req,res) => {
-    try{
-        const userInterest = req.body.userInterest;
-        // console.log(userInterest);
-        // console.log("hyy");
-        if (userInterest.length === 0) {
-            let posts = await Post.find().sort({ createdAt: -1 }).populate('author', 'userName profilePicture interests');
-            return res.status(200).json({
-              success: true,
-              posts,
-            });
-          }
-        let posts = await Post.find().sort({createdAt : -1})
+router.post('/', isAuthenticate, async (req, res) => {
+    try {
+      const userInterests = req.body.userInterest; 
+      let { page = 1, limit = 5 } = req.query;
+      page = parseInt(page, 10);
+      limit = parseInt(limit, 10);
+  
+      let posts = await Post.find()
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
         .populate('author', 'userName profilePicture interests')
         .populate({
-            path : 'comments.user',
-            select : 'userName profilePicture'
-        });;
-    
-        const suggestedPost = posts.filter((post) => {
-            return post.author.interests && post.author.interests.some((interest) => {
-              return userInterest
-                .map((interest) => interest.trim().replace(" ", '').toLowerCase())
-                .includes(interest.trim().replace(" ", '').toLowerCase());
-            });
+          path: 'comments.user',
+          select: 'userName profilePicture'
         });
-
-        posts = suggestedPost;
-
-        return res.status(200).json({
-            success : true,
-            posts
-        })
-    }catch(err){
-        res.send(err.message);
+  
+      if (userInterests.length > 0) {
+        const normalizedUserInterests = userInterests.map((item) =>
+          item.trim().replace(/\s/g, '').toLowerCase()
+        );
+  
+        posts = posts.filter((post) => {
+          if (!post.author.interests) return false;
+          return post.author.interests.some((authorInterest) => {
+            const normalizedAuthorInterest = authorInterest
+              .trim()
+              .replace(/\s/g, '')
+              .toLowerCase();
+            return normalizedUserInterests.includes(normalizedAuthorInterest);
+          });
+        });
+      }
+  
+      // For pagination info, get the total count.
+      // When filtering is applied in memory, this count does not reflect filtered count.
+      // For a robust solution, perform a separate count query with matching criteria.
+      const totalPosts = await Post.countDocuments();
+  
+      return res.status(200).json({
+        success: true,
+        posts,
+        hasMore: page * limit < totalPosts
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: err.message
+      });
     }
-})
+  });
 
 module.exports = router;
