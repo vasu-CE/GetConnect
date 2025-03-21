@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { toast } from "sonner";
@@ -14,21 +14,21 @@ import { removePost, setPosts } from "../redux/PostSlice";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { setAuthUser } from "@/redux/authSlice";
 
 const Postcard = ({post}) => {
   const {user} = useSelector((state) => state.auth);
   const {posts} = useSelector((state) => state.post);
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
-  const [count, setCount] = useState(post?.likes?.length);
-  const [followed, setFollowed] = useState(user?.connection.includes(post.author?._id));
-
+  const [count, setCount] = useState(post?.likes?.length);const [isFollowing, setIsFollowing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState(post?.comments || []);
   const [commentText, setCommentText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  
   const likeHandler = async () => {
     // Optimistic update
     const newLikedState = !liked;
@@ -36,6 +36,10 @@ const Postcard = ({post}) => {
   
     setLiked(newLikedState);
     setCount(newCount);
+
+    // Store the previous state for potential rollback
+    const previousLiked = liked;
+    const previousCount = count;
   
     try {
       const response = await axios.get(
@@ -44,23 +48,27 @@ const Postcard = ({post}) => {
       );
   
       if (!response.data.success) {
-        // Revert changes if the API fails
-        setLiked(!newLikedState);
-        setCount(newLikedState ? count - 1 : count + 1);
-
-        const updatePostData = posts.map(p => 
-          p.id === post._id ? {
-            ...p,
-            likes : liked ? p.likes.filter(id => id !== user._id) : [...p.likes, user._id]
-          } :p
-        )
-        dispatch(setPosts(updatePostData));
+        setLiked(previousLiked);
+        setCount(previousCount);
         toast.error("Failed to update like state");
+        return;
       }
+      const updatedPosts = posts.map(p => 
+        p._id === post._id 
+          ? {
+              ...p,
+              likes: newLikedState 
+                ? [...p.likes, user._id]
+                : p.likes.filter(id => id !== user._id)
+            }
+          : p
+      );
+      dispatch(setPosts(updatedPosts));
+      
     } catch (err) {
       // Revert changes in case of an error
-      setLiked(!newLikedState);
-      setCount(newLikedState ? count - 1 : count + 1);
+      setLiked(previousLiked);
+      setCount(previousCount);
       toast.error("Error liking the post");
     }
   };
@@ -76,7 +84,7 @@ const Postcard = ({post}) => {
   
       if (response.data.success) {
         toast.success("Post deleted successfully");
-        console.log(post._id);
+        // console.log(post._id);
       } else {
         toast.error("Failed to delete post");
       }
@@ -88,23 +96,50 @@ const Postcard = ({post}) => {
   };
 
   const followHandler = async () => {
+    if (isLoading) return;
+    
+    if (isFollowing && !window.confirm('Are you sure you want to unfollow this user?')) {
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
+      setIsFollowing(!isFollowing);
+
       const response = await axios.post(
         `${import.meta.env.VITE_URL}/user/connection/${post.author._id}`,
         {},
         { withCredentials: true }
       );
 
-      if (response.data.success) {
-        setFollowed(response.data.following);
-        toast.success(response.data.message);
-      } else {
-        toast.error(response.data.message);
+      if (!response.data.success) {
+        // Rollback if failed
+        setIsFollowing(isFollowing);
+        toast.error(response.data.message || "Failed to update follow status");
+        return;
       }
+      const updatedUser = {
+        ...user , 
+        connection : isFollowing
+        ? user.connection.filter(id => id != post.author?._id)
+        : [...user.connection , post.author?._id]
+      }
+      dispatch(setAuthUser(updatedUser))
+      toast.success(response.data.message);
     } catch (err) {
-      toast.error(err.message);
+      // Rollback on error
+      setIsFollowing(isFollowing);
+      toast.error(err.message || "Failed to update follow status");
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Update follow state when user prop changes
+  useEffect(() => {
+    setIsFollowing(user?.connection?.includes(post.author?._id) || false);
+  }, [user?.connection, post.author?._id]);
 
   const commentHandeler = async () => {
     try{
@@ -135,7 +170,7 @@ const Postcard = ({post}) => {
         );
         toast.error("Failed to post comment");
       }
-      console.log(comments);
+      // console.log(comments);
     }catch(err){
       toast.error(err.message);
     }
@@ -190,13 +225,14 @@ const Postcard = ({post}) => {
           ) : (
             <DropdownMenuItem
               onClick={followHandler}
+              disabled={isLoading}
               className={`${
-                followed
+                isFollowing
                   ? "text-red-500 hover:text-red-700"
                   : "text-green-500 hover:text-green-700"
-              }`}
+              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {followed ? "Unfollow" : "Follow"}
+              {isLoading ? 'Processing...' : (isFollowing ? "Unfollow" : "Follow")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -256,7 +292,7 @@ const Postcard = ({post}) => {
                       alt={comment.user.userName} 
                       className="w-10 h-10 rounded-full border-2 border-blue-500 object-cover"
                     />
-                    {console.log(comment)}
+                    {/* {console.log(comment)} */}
                     {/* Comment Content */}
                     <div className="flex-1">
                       <div className="flex justify-between items-center">

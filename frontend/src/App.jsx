@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import LoginSignupForm from './components/Login';
 import Home from './components/Home';
@@ -10,8 +9,7 @@ import ProfilePage from './components/ProfilePage';
 import Quiz from './components/Quiz';
 import Projects from './components/Projects';
 import ProjectPage from './components/ProjectPage';
-// import UserAuth from './auth/userAuth';
-import UserAuth from './auth/UserAuth.jsx';
+import UserAuth from './auth/userAuth';
 
 // Create a wrapper component to conditionally render Navbar
 const NavbarWrapper = () => {
@@ -24,7 +22,7 @@ function App() {
   return (  
     <Router>
       <NavbarWrapper />
-      <div className=" pt-4"> {/* Removed pt-10 since we don't need it on login page */}
+      <div className=""> {/* Removed pt-10 since we don't need it on login page */}
         <Routes>
           <Route path="/" element={<LoginSignupForm />} />
           <Route path="/home" element={<UserAuth><Home /></UserAuth>} />

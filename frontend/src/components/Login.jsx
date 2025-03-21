@@ -1,14 +1,11 @@
-// import { label } from '@radix-ui/react-label'
-import React, { lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
-// import { setAuthUser } from '@/store/authSlice';
 import { setAuthUser } from "@/redux/authSlice";
 import axios from "axios";
-const Waves = lazy(() => import("./ReactBeats/Waves"));
 
 function Login() {
   const [loading, setLoading] = useState(false);
@@ -23,13 +20,6 @@ function Login() {
     password: "",
     otp: "",
   });
-  const [showWaves, setShowWaves] = useState(false);
-
-  useEffect(() => {
-    // Delay loading Waves to prioritize initial page render
-    const timer = setTimeout(() => setShowWaves(true), 700);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     let interval;
@@ -121,155 +111,133 @@ function Login() {
     }
   };
 
-  
   return (
-    <div className="w-screen h-screen flex justify-center items-center bg-fuchsia-100 relative mt-[-20px]">
-      {showWaves && (
-        <Waves
-          lineColor="#999"
-          backgroundColor="rgba(255, 255, 255, 0.2)"
-          waveSpeedX={0.02}
-          waveSpeedY={0.01}
-          waveAmpX={40}
-          waveAmpY={20}
-          friction={0.9}
-          tension={0.01}
-          maxCursorMove={120}
-          xGap={12}
-          yGap={36}
-        />
-      )}
-
-      <form
-        onSubmit={submitHandler}
-        className="shadow-lg border border-fuchsia-300 bg-slate-100 flex flex-col gap-2 p-8 pb-2 w-[30vw] absolute"
-      >
-        <h1 className="text-xl text-center font-bold mb-2">
-          {isSignup ? "Signup" : "Login"}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-fuchsia-200 to-purple-200">
+      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
+        <h1 className="text-3xl font-semibold text-center mb-6 text-gray-800">
+          {isSignup ? "Sign Up" : "Log In"}
         </h1>
-
-        {isSignup && (
-          <div className="flex items-center gap-2">
-            <label className="font-medium whitespace-nowrap w-[32%]">
-              UserName :
+        <form onSubmit={submitHandler} className="space-y-4">
+          {isSignup && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Username
+              </label>
+              <Input
+                type="text"
+                name="userName"
+                placeholder="UserName"
+                value={input.userName}
+                onChange={changeHandler}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                disabled={loading}
+              />
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Email
             </label>
             <Input
-              type="text"
-              name="userName"
-              value={input.userName}
+              type="email"
+              name="email"
+              placeholder="xyz@gmail.com"
+              required
+              value={input.email}
               onChange={changeHandler}
-              className="bg-slate-200 focus-visible:ring-transparent text-gray-800 my-2"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               disabled={loading}
             />
           </div>
-        )}
-
-        <div className="flex items-center gap-2">
-          <label className="font-medium whitespace-nowrap w-[32%]">
-            Email<sup className="text-red-500 text-lg">*</sup> :{" "}
-          </label>
-          <Input
-            type="email"
-            name="email"
-            required
-            value={input.email}
-            onChange={changeHandler}
-            className="bg-slate-200 focus-visible:ring-transparent text-gray-800 my-2"
-            disabled={loading}
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="font-medium whitespace-nowrap w-[32%]">
-            Password :
-          </label>
-          <Input
-            type="password"
-            name="password"
-            value={input.password}
-            onChange={changeHandler}
-            className="bg-slate-200 focus-visible:ring-transparent text-gray-800 my-2"
-            disabled={loading}
-          />
-        </div>
-
-        {isSignup && (
-          <>
-            {!next && (
-              <Button
-                className="w-[30%] mx-auto mt-3 bg-green-500 hover:bg-green-600"
-                onClick={handleOTP}
-                disabled={loading}
-              >
-                {loading ? "Loading..." : "Send OTP"}
-              </Button>
-            )}
-
-            {next && (
-              <div className="flex items-center gap-2">
-                <label className="font-medium whitespace-nowrap w-[32%]">
-                  OTP :
-                </label>
-                <Input
-                  type="tel"
-                  name="otp"
-                  value={input.otp}
-                  onChange={changeHandler}
-                  className="bg-slate-200 focus-visible:ring-transparent text-gray-800 my-2"
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <Input
+              type="password"
+              name="password"
+              placeholder="password"
+              value={input.password}
+              onChange={changeHandler}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              disabled={loading}
+            />
+          </div>
+          {isSignup && (
+            <>
+              {!next && (
+                <Button
+                  className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md"
+                  onClick={handleOTP}
                   disabled={loading}
-                />
-              </div>
-            )}
-
-            {next && timer > 0 && (
-              <p className="text-gray-500 text-sm text-center">
-                Resend OTP in {timer} seconds
-              </p>
-            )}
-
-            {next && timer === 0 && (
-              <Button
-                className="w-[30%] mx-auto mt-3 bg-blue-500 hover:bg-blue-600"
-                onClick={handleOTP}
-                disabled={loading}
-              >
-                Resend OTP
-              </Button>
-            )}
-          </>
-        )}
-
-        {(!isSignup || (isSignup && next)) && (
-          <Button
-            className="bg-purple-500 hover:bg-purple-600"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Loading..." : isSignup ? "Signup" : "Login"}
-          </Button>
-        )}
-
-        <div className="text-center mt-3">
-          {isSignup ? "Already have an account?" : "Don't have an account?"}
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignup(!isSignup);
-              localStorage.setItem("isSignup", JSON.stringify(!isSignup));
-              setNext(false);
-              setInput({
-                email: "",
-                userName: "",
-                password: "",
-                otp: "",
-              });
-            }}
-            className="text-blue-600 ml-1"
-          >
-            {isSignup ? "Login" : "Signup"}
-          </button>
+                >
+                  {loading ? "Loading..." : "Send OTP"}
+                </Button>
+              )}
+              {next && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    OTP
+                  </label>
+                  <Input
+                    type="tel"
+                    name="otp"
+                    value={input.otp}
+                    onChange={changeHandler}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    disabled={loading}
+                  />
+                </div>
+              )}
+              {next && timer > 0 && (
+                <p className="text-gray-500 text-sm text-center">
+                  Resend OTP in {timer} seconds
+                </p>
+              )}
+              {next && timer === 0 && (
+                <Button
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md"
+                  onClick={handleOTP}
+                  disabled={loading}
+                >
+                  Resend OTP
+                </Button>
+              )}
+            </>
+          )}
+          {(!isSignup || (isSignup && next)) && (
+            <Button
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? "Loading..." : isSignup ? "Sign Up" : "Log In"}
+            </Button>
+          )}
+        </form>
+        <div className="text-center mt-4">
+          <p className="text-sm text-gray-600">
+            {isSignup ? "Already have an account?" : "Don't have an account?"}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignup(!isSignup);
+                localStorage.setItem("isSignup", JSON.stringify(!isSignup));
+                setNext(false);
+                setInput({
+                  email: "",
+                  userName: "",
+                  password: "",
+                  otp: "",
+                });
+              }}
+              className="text-indigo-600 hover:text-indigo-800 ml-1"
+            >
+              {isSignup ? "Log In" : "Sign Up"}
+            </button>
+          </p>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PostFeed from './PostFeed.jsx';
 import ProfileSidebar from './ProfileSidebar';
 import Community from './Community';

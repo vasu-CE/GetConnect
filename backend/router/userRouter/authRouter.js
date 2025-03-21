@@ -41,7 +41,8 @@ router.post('/connection/:id', isAuthenticate, async (req, res) => {
     try {
         const myid = req.id;
         const another = req.params.id;
-        // console.log(myid)
+        console.log(another)
+        console.log(myid)
         if (myid === another) {
             return res.status(400).json({ success: false, message: "You can't follow yourself" });
         }
